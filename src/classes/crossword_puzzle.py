@@ -57,7 +57,7 @@ class CrosswordPuzzle:
 
         return overlap_grid
 
-    def get_clue(self, id: tuple[int, str]) -> Clue | None:
+    def get_clue(self, id: tuple[int, DIRECTIONS]) -> Clue | None:
         return next(
             (clue for clue in self.__clues if clue.id == id),
             None,
@@ -66,7 +66,7 @@ class CrosswordPuzzle:
     def get_answer(self, clue: Clue) -> list[LETTERS]:
         return self.__get_letter_grid_slice(clue).tolist()
 
-    def set_answer(self, clue: Clue, answer: str):
+    def set_answer(self, clue: Clue, answer: str) -> None:
         if len(answer) != clue.length:
             raise ValueError(
                 f"Answer length {len(answer)} does not match clue length {clue.length}"
@@ -88,7 +88,7 @@ class CrosswordPuzzle:
         grid_slice[:] = answer_arr
         self.__filled_in_clues.add(clue)
 
-    def remove_answer(self, clue: Clue):
+    def remove_answer(self, clue: Clue) -> None:
         if clue not in self.__filled_in_clues:
             raise ValueError("Cannot remove answer because clue is not filled in")
 
@@ -99,6 +99,6 @@ class CrosswordPuzzle:
             if any(c not in self.__filled_in_clues for c in overlapping_clues if c != clue):
                 current_clue_letter_grid_slice[idx] = UNKNOWN_LETTER
 
-    def print_grid(self):
+    def print_grid(self) -> None:
         for row in self.__letter_grid:
             print(" ".join(row))

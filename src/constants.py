@@ -3,8 +3,9 @@ from typing import Literal, TypeAlias
 LLM_MODEL = "gemma4:e4b"
 
 PUZ_FILE_DIR = "puz_files"
+
 DIRECTIONS: TypeAlias = Literal["across", "down"]
-UNKNOWN_LETTER = "_"
+UNKNOWN_LETTER: TypeAlias = Literal["_"]
 LETTERS: TypeAlias = Literal[
     "A",
     "B",
