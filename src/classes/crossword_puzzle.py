@@ -63,6 +63,9 @@ class CrosswordPuzzle:
             None,
         )
 
+    def get_clues(self) -> list[Clue]:
+        return self.__clues
+
     def get_answer(self, clue: Clue) -> list[LETTERS]:
         return self.__get_letter_grid_slice(clue).tolist()
 
