@@ -4,7 +4,7 @@ from llama_index.llms.ollama import Ollama
 
 from src.classes.clue import Clue
 from src.classes.ranked_clues import RankedClues
-from src.constants import LLM_MODEL
+from src.constants import CLUE_ID, LLM_MODEL
 
 
 @cache
@@ -32,15 +32,15 @@ def __generate_prompt(clues: list[Clue]) -> str:
     )
 
 
-def __missing_clues(clues: list[Clue], difficulty_scores: dict[tuple[int, str], int]) -> list[Clue]:
+def __missing_clues(clues: list[Clue], difficulty_scores: dict[CLUE_ID, int]) -> list[Clue]:
     return [clue for clue in clues if clue.id not in difficulty_scores]
 
 
 def __collect_difficulty_scores(
     structured_llm: Ollama,
     clues: list[Clue],
-) -> dict[tuple[int, str], int]:
-    difficulty_scores: dict[tuple[int, str], int] = {}
+) -> dict[CLUE_ID, int]:
+    difficulty_scores: dict[CLUE_ID, int] = {}
     clues_to_score = clues
     attempts = 0
 
@@ -56,7 +56,7 @@ def __collect_difficulty_scores(
         ranked_clues: RankedClues = structured_llm.complete(prompt).raw
 
         for ranked_clue in ranked_clues.ranked_clues:
-            clue_id = (ranked_clue.number, ranked_clue.direction)
+            clue_id: CLUE_ID = (ranked_clue.number, ranked_clue.direction)
             difficulty_scores[clue_id] = ranked_clue.difficulty_score
 
         clues_to_score = __missing_clues(clues, difficulty_scores)

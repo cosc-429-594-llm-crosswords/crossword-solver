@@ -2,7 +2,8 @@ from functools import cache
 
 from llama_index.llms.ollama import Ollama
 
-from src.classes.guesses import Guesses
+from src.classes.clue import Clue
+from src.classes.guesses import Guess, Guesses
 from src.constants import LLM_MODEL
 
 
@@ -35,7 +36,7 @@ def __get_ordinal(n: int) -> str:
     return low_ordinals.get(n, f"{n}th")
 
 
-def __generate_prompt(clue: str, pattern: list[str]) -> str:
+def __generate_prompt(clue: Clue, pattern: list[str]) -> str:
     constraints = []
     for i, letter in enumerate(pattern, start=1):
         status = f"is {letter}" if letter != "_" else "is unknown"
@@ -46,7 +47,7 @@ def __generate_prompt(clue: str, pattern: list[str]) -> str:
     return (
         f"You are a crossword solver. Provide five unique guesses matching the clue and pattern.\n\n"
         f"Constraints:\n"
-        f"- Clue: {clue}\n"
+        f"- Clue: {clue.text}\n"
         f"- Length: {len(pattern)} letters\n"
         f"{pattern_text}\n\n"
         f"Final Output:\n"
@@ -55,11 +56,29 @@ def __generate_prompt(clue: str, pattern: list[str]) -> str:
     )
 
 
-def get_guesses_for_clue_using_llm(clue: str, pattern: list[str]) -> Guesses:
+def filter_invalid_guesses(guesses: list[Guess], pattern: list[str]) -> list[Guess]:
+    valid_guesses = []
+    for guess in guesses:
+        if len(guess.answer) != len(pattern):
+            continue
+
+        is_valid = True
+        for g_char, p_char in zip(guess.answer, pattern, strict=True):
+            if p_char != "_" and g_char != p_char:
+                is_valid = False
+                break
+
+        if is_valid:
+            valid_guesses.append(guess)
+
+    return valid_guesses
+
+
+def get_guesses_for_clue_using_llm(clue: Clue, pattern: list[str]) -> list[Guess]:
     structured_llm = __get_structured_llm()
     prompt = __generate_prompt(clue, pattern)
 
     response: Guesses = structured_llm.complete(prompt).raw
     response.guesses.sort(key=lambda x: x.confidence_score, reverse=True)
 
-    return response
+    return filter_invalid_guesses(response.guesses, pattern)

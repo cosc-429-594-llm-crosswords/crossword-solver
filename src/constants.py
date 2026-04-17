@@ -4,7 +4,7 @@ LLM_MODEL = "gemma4:e4b"
 
 PUZ_FILE_DIR = "puz_files"
 DIRECTIONS: TypeAlias = Literal["across", "down"]
-UNKNOWN_LETTER= "_"
+UNKNOWN_LETTER = "_"
 LETTERS: TypeAlias = Literal[
     "A",
     "B",
@@ -34,3 +34,4 @@ LETTERS: TypeAlias = Literal[
     "Z",
     "_",
 ]
+CLUE_ID: TypeAlias = tuple[int, DIRECTIONS]

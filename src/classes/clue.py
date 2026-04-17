@@ -1,6 +1,6 @@
 import dataclasses
 
-from src.constants import DIRECTIONS
+from src.constants import CLUE_ID, DIRECTIONS
 
 
 @dataclasses.dataclass
@@ -13,7 +13,7 @@ class Clue:
     col: int
 
     @property
-    def id(self) -> tuple[int, DIRECTIONS]:
+    def id(self) -> CLUE_ID:
         return (self.number, self.direction)
 
     def __hash__(self):
