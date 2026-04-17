@@ -1,9 +1,17 @@
-from src.constants import PUZ_FILE_DIR
 import os
 import subprocess
 
+from src.constants import PUZ_FILE_DIR
 
-def download_puz_file(outlet, day, month, year, username=None, password=None):
+
+def download_puz_file(
+    outlet: str,
+    day: str,
+    month: str,
+    year: str,
+    username: str | None = None,
+    password: str | None = None,
+) -> None:
     os.makedirs(PUZ_FILE_DIR, exist_ok=True)
 
     date = f"{year}-{month}-{day}"
@@ -31,6 +39,7 @@ def download_puz_file(outlet, day, month, year, username=None, password=None):
 
     try:
         print(f"Downloading PUZ file for {outlet} on {date}...")
+        print(f"Running command: {' '.join(arguments)}")
         subprocess.run(
             arguments,
             check=True,

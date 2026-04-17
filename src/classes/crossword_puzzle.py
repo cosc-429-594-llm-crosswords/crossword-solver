@@ -1,42 +1,113 @@
+from typing import get_args
+
+import numpy as np
 import puz
-from src.classes.grid import Grid
+
 from src.classes.clue import Clue
+from src.constants import CLUE_ID, DIRECTIONS, LETTERS, UNKNOWN_LETTER
+
+
+def get_slice(clue: Clue, grid: np.ndarray) -> np.ndarray:
+    if clue.direction == "across":
+        return grid[clue.row, clue.col : clue.col + clue.length]
+    else:
+        return grid[clue.row : clue.row + clue.length, clue.col]
 
 
 class CrosswordPuzzle:
     def __init__(self, puz_file_path):
         p = puz.read(puz_file_path)
 
-        self.grid = Grid(p.width, p.height)
-        self.clues = self._extract_clues(p)
+        self.__clues = self.__get_clues(p)
 
-    def get_clue(self, number, direction):
+        self.__letter_grid = np.full((p.height, p.width), fill_value=UNKNOWN_LETTER, dtype="U1")
+        self.__overlap_grid = self.__create_overlap_grid(p)
+        self.__filled_in_clues = set()
+
+    @property
+    def is_solved(self) -> bool:
+        return len(self.__filled_in_clues) == len(self.__clues)
+
+    def __get_clues(self, p: puz.Puzzle) -> list[Clue]:
+        numbering = p.clue_numbering()
+
+        return [
+            Clue(
+                text=data["clue"],
+                length=data["len"],
+                number=data["num"],
+                direction=direction,
+                row=data["row"],
+                col=data["col"],
+            )
+            for direction in get_args(DIRECTIONS)
+            for data in getattr(numbering, direction)
+        ]
+
+    def __get_letter_grid_slice(self, clue: Clue) -> np.ndarray:
+        return get_slice(clue, self.__letter_grid)
+
+    def __get_overlap_grid_slice(self, clue: Clue) -> np.ndarray:
+        return get_slice(clue, self.__overlap_grid)
+
+    def __create_overlap_grid(self, p: puz.Puzzle) -> np.ndarray:
+        overlap_grid = np.frompyfunc(set, 0, 1)(np.empty((p.width, p.height), dtype=object))
+
+        for clue in self.__clues:
+            grid_slice = get_slice(clue, overlap_grid)
+
+            for i in range(clue.length):
+                grid_slice[i].add(clue)
+
+        return overlap_grid
+
+    def get_clue(self, id: CLUE_ID) -> Clue | None:
         return next(
-            (c for c in self.clues if c.number == number and c.direction == direction),
+            (clue for clue in self.__clues if clue.id == id),
             None,
         )
 
-    def print_info(self):
-        print(self.grid)
+    def get_clues(self) -> list[Clue]:
+        return self.__clues
 
-    def _extract_clues(self, p):
-        numbering = p.clue_numbering()
-        solution_grid = puz.Grid(p.solution, p.width, p.height)
-        extracted_clues = []
+    def get_pattern(self, clue: Clue) -> list[LETTERS]:
+        return self.__get_letter_grid_slice(clue).tolist()
 
-        for direction in ["across", "down"]:
-            for c_data in getattr(numbering, direction):
-                answer = solution_grid.get_string_for_clue(c_data)
+    def set_answer(self, clue: Clue, answer: str) -> None:
+        if len(answer) != clue.length:
+            raise ValueError(
+                f"Answer length {len(answer)} does not match clue length {clue.length}"
+            )
 
-                clue_obj = Clue(
-                    number=c_data["num"],
-                    text=c_data["clue"],
-                    answer=answer,
-                    row=c_data["row"],
-                    col=c_data["col"],
-                    direction=direction,
-                    grid=self.grid,
-                )
-                extracted_clues.append(clue_obj)
+        grid_slice = self.__get_letter_grid_slice(clue)
 
-        return extracted_clues
+        answer_arr = np.array(list(answer))
+        known_mask = grid_slice != UNKNOWN_LETTER
+        conflicts = known_mask & (grid_slice != answer_arr)
+
+        if np.any(conflicts):
+            idx = np.where(conflicts)[0][0]
+            raise ValueError(
+                f"Answer letter '{answer_arr[idx]}' does not match "
+                f"existing letter '{grid_slice[idx]}' in grid"
+            )
+
+        grid_slice[:] = answer_arr
+        self.__filled_in_clues.add(clue)
+
+    def remove_answer(self, clue: Clue) -> None:
+        if clue not in self.__filled_in_clues:
+            raise ValueError("Cannot remove answer because clue is not filled in")
+
+        overlap_grid_slice = self.__get_overlap_grid_slice(clue)
+        current_clue_letter_grid_slice = self.__get_letter_grid_slice(clue)
+
+        for idx, overlapping_clues in enumerate(overlap_grid_slice):
+            if any(c not in self.__filled_in_clues for c in overlapping_clues if c != clue):
+                current_clue_letter_grid_slice[idx] = UNKNOWN_LETTER
+
+        self.__filled_in_clues.remove(clue)
+
+    def print_grid(self) -> None:
+        for row in self.__letter_grid:
+            print(" ".join(row))
