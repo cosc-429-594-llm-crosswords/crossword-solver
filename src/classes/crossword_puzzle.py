@@ -24,6 +24,8 @@ class CrosswordPuzzle:
         self.__overlap_grid = self.__create_overlap_grid(p)
         self.__filled_in_clues = set()
 
+        self.__solutions = self.__generate_solutions(p)
+
     @property
     def is_solved(self) -> bool:
         return len(self.__filled_in_clues) == len(self.__clues)
@@ -109,5 +111,25 @@ class CrosswordPuzzle:
         self.__filled_in_clues.remove(clue)
 
     def print_grid(self) -> None:
-        for row in self.__letter_grid:
-            print(" ".join(row))
+        for letter_row, overlap_row in zip(self.__letter_grid, self.__overlap_grid, strict=False):
+            for letter, overlapping_clues in zip(letter_row, overlap_row, strict=False):
+                if len(overlapping_clues) == 0:
+                    print("◼", end=" ")
+                else:
+                    print(letter, end=" ")
+
+            print()
+
+    def __generate_solutions(self, p: puz.Puzzle) -> dict[CLUE_ID, str]:
+        solutions = {}
+
+        solution_grid = np.array(list(p.solution)).reshape((p.height, p.width))
+
+        for clue in self.__clues:
+            solution = "".join(get_slice(clue, solution_grid).tolist())
+            solutions[clue.id] = solution
+
+        return solutions
+
+    def get_solution(self, clue: Clue) -> str:
+        return self.__solutions[clue.id]
