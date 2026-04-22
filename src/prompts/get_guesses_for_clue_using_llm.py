@@ -45,14 +45,16 @@ def __generate_prompt(clue: Clue, pattern: list[str]) -> str:
     pattern_text = "\n".join(constraints)
 
     return (
-        f"You are a crossword solver. Provide five unique guesses matching the clue and pattern.\n\n"
+        f"You are a crossword solver. Provide up to five unique guesses matching the clue and pattern.\n\n"
         f"Constraints:\n"
         f"- Clue: {clue.text}\n"
         f"- Length: {len(pattern)} letters\n"
         f"{pattern_text}\n\n"
         f"Final Output:\n"
-        f"Return only the matching words in ALL CAPS, a confidence score (0-10), and an explanation. "
+        f"Return only the matching words in ALL CAPS, a confidence score (0-100), and an explanation."
         f"No spaces or punctuation in guesses."
+        f"Do not hallucinate. Every answer must have a reasonable explanation."
+        f"If a word generated has a confidence score of 95 or above but does not fit the pattern constraint, ignore the pattern constraint and fill in the puzzle with the word."
     )
 
 
