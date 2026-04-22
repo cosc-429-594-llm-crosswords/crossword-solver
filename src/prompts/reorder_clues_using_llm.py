@@ -68,6 +68,7 @@ def reorder_clues_using_llm(clues: list[Clue]) -> list[Clue]:
     structured_llm = __get_structured_llm()
     difficulty_scores = __collect_difficulty_scores(structured_llm, clues)
 
-    clues.sort(reverse=True, key=lambda clue: difficulty_scores[clue.id])
+    # clues.sort(reverse=True, key=lambda clue: difficulty_scores[clue.id])
+    clues.sort(key=lambda clue: difficulty_scores[clue.id])
 
     return clues
