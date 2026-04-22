@@ -55,6 +55,7 @@ def __generate_prompt(clue: Clue, pattern: list[str]) -> str:
         f"No spaces or punctuation in guesses."
         f"Do not hallucinate. Every answer must have a reasonable explanation."
         f"If a word generated has a confidence score of 95 or above but does not fit the pattern constraint, ignore the pattern constraint and fill in the puzzle with the word."
+        f"If abbreviate, abbreviation, abbr., or abbrev. are not specified in the clue, then do not abbreviate the answer to fit the pattern."
     )
 
 

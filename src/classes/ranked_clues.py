@@ -14,10 +14,5 @@ class RankedClue(BaseModel):
 
 class RankedClues(BaseModel):
     ranked_clues: list[RankedClue] = Field(
-        description="A list of clues ranked by their difficulty score, with the most difficult clue first."
-    )
-
-class RankedCluesCopy(BaseModel):
-    ranked_clues: list[RankedClue] = Field(
         description="A list of clues ranked by their difficulty score, with the least difficult clue first."
     )
