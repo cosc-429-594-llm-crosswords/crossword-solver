@@ -54,7 +54,7 @@ def __collect_difficulty_scores(clues: list[Clue], debug: bool = False) -> dict[
             )
 
         if debug:
-            print(f"=== REORDER CLUES USING {LLM_MODEL} (Attempts: {attempts})===")
+            print(f"=== REORDER CLUES with {LLM_MODEL} (Attempts: {attempts}) ===")
             print(PROMPT_TEMPLATE.format(clues=clues_to_score))
 
         ranked_clues: RankedClues = llm.structured_predict(
@@ -78,7 +78,7 @@ def reorder_clues_using_llm(clues: list[Clue], debug: bool = False) -> list[Clue
     clues.sort(key=lambda clue: difficulty_scores[clue.id])
 
     if debug:
-        print("Clues reordered based on LLM difficulty scores:")
+        print(f"=== REORDERED CLUES {LLM_MODEL} ===")
         for clue in clues:
             print(
                 f"  {clue.number} {clue.direction}: {clue.text} (Difficulty: {difficulty_scores[clue.id]})"
