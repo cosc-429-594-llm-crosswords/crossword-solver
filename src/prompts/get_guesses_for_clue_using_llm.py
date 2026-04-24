@@ -9,34 +9,19 @@ from src.constants import LLM_MODEL
 
 PROMPT_TEMPLATE = RichPromptTemplate(
     """
-You are an expert crossword solver whose goal is to generate valid guesses for a crossword clue based on the clue's text and known letter constraints.
-Each guess should be accompanied by a confidence score between 0 and 100, as well as a brief explanation of how it satisfies the clue and letter constraints.
-The sum of the confidence scores for all guesses should not exceed 100, and higher confidence scores should be assigned to guesses that better satisfy the clue and letter constraints according to the rules outlined below.
-It is acceptable to return fewer than five guesses if there are not enough valid options that meet the criteria, but do not return any guesses that violate the rules.
-It is better to return fewer high-quality guesses than to include low-quality guesses that do not satisfy the clue and letter constraints well.
+You are a crossword solver. Provide up to five unique guesses matching the clue and pattern.
+Constraints:
+- Clue: {{ clue_text }}
+- Length: {{ pattern_length }} letters
 
-### CROSSWORD RULES
-The following are rules for generating valid guesses from most to least important. Prioritize guesses that satisfy more of these rules, and assign higher confidence scores to those guesses accordingly.
-1. RELEVANCE: The guesses should directly relate to the whole clue, not just a part of it, and should be commonly associated with the clue's wording and theme. DO NOT include guesses that are only remotely related to the clue or require multiple leaps of logic to connect them to the clue's meaning.
-2. LETTER CONSTRAINT MATCHING: Guesses must fit the specified letter constraints, matching known letters in their exact positions and having the correct length. The constraints are always correct and should be strictly followed.
-3. INTEGRITY: DO NOT include spaces, numbers, or punctuation. Guesses must be valid, correctly spelled dictionary words.
-4. GRAMMATICAL CONSISTENCY: Guesses must match the clue's grammatical requirements, including tense, part of speech, and number (singular/plural).
-5. UNIQUENESS: All five guesses must be distinct from each other, providing a variety of plausible answers rather than minor variations on the same word.
-6. SIMPLICITY: Guesses should be straightforward and not require convoluted reasoning or obscure knowledge to connect them to the clue. Simpler, more direct guess should also have higher confidence scores than more complex, less direct guesses.
-7. MAXIMUM CONFIDENCE SCORE: The sum of the confidence scores for all guesses should not exceed 100. Assign higher confidence scores to guesses that better satisfy the above rules, and ensure that the total does not exceed this limit.
+{{ pattern_text }}
 
-
-### Input Variables
-The following is the clue your are trying to solve:
-
-{{ clue_text }}
-
-The answer has {{ letter_constraint_length }} letters, with the following known letter constraints:
-
-{{ letter_constraint_text }}
-
-### OUTPUT FORMAT
-Return up to five guesses, each with a confidence score and a brief explanation of how it satisfies the clue and letter constraints.
+Final Output:
+Return only the matching words in ALL CAPS, a confidence score (0-100), and an explanation.
+No spaces or punctuation in guesses.
+Do not hallucinate. Every answer must have a reasonable explanation.
+If a word generated has a confidence score of 95 or above but does not fit the pattern constraint, ignore the pattern constraint and fill in the puzzle with the word.
+If abbreviate, abbreviation, abbr., or abbrev. are not specified in the clue, then do not abbreviate the answer to fit the pattern.
 """.strip()
 )
 
@@ -47,8 +32,10 @@ def __get_llm() -> Ollama:
         model=LLM_MODEL,
         request_timeout=1200.0,
         context_window=1000,
-        temperature=0.1,
         json_mode=True,
+        temperature=0.1,
+        top_p=0.9,
+        top_k=5,
     )
 
     return llm

@@ -4,20 +4,52 @@ from llama_index.core.prompts import RichPromptTemplate
 from llama_index.llms.ollama import Ollama
 
 from src.classes.clue import Clue
-from src.classes.ranked_clues import RankedClues
+from src.classes.ranked_clues import RankedClue, RankedClues
 from src.constants import CLUE_ID, LLM_MODEL
+
+VAGUENESS_WEIGHT = 0.75
+COMPLEXITY_WEIGHT = 0.25
 
 PROMPT_TEMPLATE = RichPromptTemplate(
     """
-You are a crossword puzzle solver. You are given a list of crossword clues.
-Assign each clue a difficulty score from 0 to 100, with 0 being the easiest and 100 being the hardest.
-Provide a brief explanation of why each clue is considered to have the given difficulty score,
-including any wordplay, obscurity, or other factors that contribute to its difficulty.
-If you cannot score a clue confidently, omit it so it can be retried separately.
+You are a crossword puzzle solver. You are given a list of crossword clues with the goal of assigning a vagueness score and a complexity score to each.
+Assign each clue a vagueness score from 0 to 100, with 0 being the least vague and 100 being the most vague.
+Assign each clue a complexity score from 0 to 100, with 0 being the least complex and 100 being the most complex.
+Provide a brief explanation of why each clue is considered to have the given vagueness and complexity scores,including any wordplay, obscurity, or other factors that contribute to its difficulty.
+At the end of the explanation, provide some potential answers that could fit the clue, which can help illustrate the vagueness and complexity of the clue.
+Clues are less vague if they have only one obvious answer, while more vague clues have multiple plausible answers or interpretations, making them harder to solve.
+Clues are more complex when they require multiple steps of reasoning, involve intricate wordplay, or require knowledge of obscure references, making them more challenging for solvers to decipher.
 
-Clues:
+Example Clues:
+
+Chinese-zodiac animal (5 letters)
+Vagueness score: 80
+Complexity score: 20
+Explanation: This clue is very vague, because there are multiple 5 letter Chinese zodiac animals ("HORSE", "TIGER", "SNAKE"), but it is not difficult because it does not require any obscure knowledge, or multiple steps of reasoning.
+
+The "p" of m.p.h (3 letters)
+Vagueness score: 10
+Complexity score: 10
+Explanation: The answer to this clue is obvious, because there is only one standard interpretation for m.p.h.. It is not difficult, because this is common knowledge.
+
+Reason to edit a text message (4 letters)
+Vagueness score: 75
+Complexity score: 20
+Explanation: With 4 letters, there are many plausible answers ("TYPO", "EDIT", "OOPS", "REDO", etc.). The clue remains quite open-ended. Complexity is low since it's a straightforward conceptual clue without wordplay.
+
+Quickly change the topic (5 letters)
+Vagueness score: 100
+Complexity score: 25
+Explanation: Multiple valid synonyms exist ("PIVOT", "EVADE", "SEGUE", "SHIFT", etc.), making it very vague. It's mildly more complex because the solver may need to think in terms of idiomatic expressions rather than a direct synonym.
+
+Swedish furniture giant (4 letters)
+Vagueness score: 10
+Complexity score: 20
+Explanation: There is only one obvious answer ("IKEA"), but requires some cultural knowledge.
+
+Here are the clues to score:
 {% for clue in clues %}
-- ({{ clue.number }} {{ clue.direction }}): {{ clue.text }}
+- ({{ clue.number }} {{ clue.direction }}): {{ clue.text }} ({{ clue.length }} letters)
 {% endfor %}
 """
 )
@@ -28,13 +60,30 @@ def __get_llm() -> Ollama:
     return Ollama(
         model=LLM_MODEL,
         request_timeout=1200.0,
-        temperature=0.0,
         json_mode=True,
+        temperature=0.1,
+        top_p=0.9,
+        top_k=5,
     )
 
 
 def __missing_clues(clues: list[Clue], difficulty_scores: dict[CLUE_ID]) -> list[Clue]:
     return [clue for clue in clues if clue.id not in difficulty_scores]
+
+
+def __get_difficulty_score(ranked_clue: RankedClue, debug: bool = False) -> int:
+    if debug:
+        print(
+            f"""Scored Clue ({ranked_clue.number} {ranked_clue.direction}): 
+            - Vagueness Score = {ranked_clue.vagueness_score}, 
+            - Complexity Score = {ranked_clue.complex_score}
+            - Explanation: {ranked_clue.explanation}"""
+        )
+
+    return (
+        VAGUENESS_WEIGHT * ranked_clue.vagueness_score
+        + COMPLEXITY_WEIGHT * ranked_clue.complex_score
+    )
 
 
 def __calculate_difficulty_scores(clues: list[Clue], debug: bool = False) -> dict[CLUE_ID, int]:
@@ -63,11 +112,8 @@ def __calculate_difficulty_scores(clues: list[Clue], debug: bool = False) -> dic
         )
 
         for ranked_clue in ranked_clues.ranked_clues:
-            print(
-                f"Scored Clue ({ranked_clue.number} {ranked_clue.direction}): Difficulty Score = {ranked_clue.difficulty_score} - Explanation: {ranked_clue.explanation}"
-            )
             clue_id: CLUE_ID = (ranked_clue.number, ranked_clue.direction)
-            difficulty_scores[clue_id] = ranked_clue.difficulty_score
+            difficulty_scores[clue_id] = __get_difficulty_score(ranked_clue, debug)
 
         clues_to_score = __missing_clues(clues, difficulty_scores)
 
@@ -79,9 +125,14 @@ def get_clue_difficulty_with_llm(clues: list[Clue], debug: bool = False) -> dict
 
     if debug:
         print("=== FINAL CLUE DIFFICULTY SCORES ===")
+        clues = sorted(
+            clues,
+            key=lambda clue: difficulty_scores.get((clue.number, clue.direction), -1),
+        )
         for clue in clues:
-            clue_id: CLUE_ID = (clue.number, clue.direction)
-            score = difficulty_scores.get(clue_id, "N/A")
-            print(f"Clue ({clue.number} {clue.direction}): Difficulty Score = {score}")
+            score = difficulty_scores.get((clue.number, clue.direction), "N/A")
+            print(
+                f"Clue ({clue.number} {clue.direction}): Difficulty Score = {score} | {clue.text}"
+            )
 
     return difficulty_scores

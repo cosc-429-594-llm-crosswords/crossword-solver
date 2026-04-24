@@ -7,8 +7,11 @@ class RankedClue(BaseModel):
     explanation: str = Field(
         description="A brief explanation of why this clue is considered difficult, based on factors such as ambiguity, wordplay, or obscurity."
     )
-    difficulty_score: int = Field(
-        description="A difficulty score between 0 and 100 indicating how difficult the clue is to solve. Higher scores indicate greater difficulty."
+    vagueness_score: int = Field(
+        description="A vagueness score between 0 and 100 indicating how vague the clue is. Higher scores indicate greater vagueness. Clues are more vague when they have multiple plausible interpretations or potential multiple correct answers, making it harder for solvers to determine the intended meaning."
+    )
+    complex_score: int = Field(
+        description="A complexity score between 0 and 100 indicating how complex the clue is to solve. Higher scores indicate greater complexity. Clues are more complex when they require multiple steps of reasoning, involve intricate wordplay, or require knowledge of obscure references, making them more challenging for solvers to decipher."
     )
 
 
