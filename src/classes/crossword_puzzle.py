@@ -22,13 +22,17 @@ class CrosswordPuzzle:
 
         self.__letter_grid = np.full((p.height, p.width), fill_value=UNKNOWN_LETTER, dtype="U1")
         self.__overlap_grid = self.__create_overlap_grid(p)
-        self.__filled_in_clues = set()
+        self.completed_clues = []
 
         self.__solutions = self.__generate_solutions(p)
 
     @property
     def is_solved(self) -> bool:
-        return len(self.__filled_in_clues) == len(self.__clues)
+        return len(self.completed_clues) == len(self.__clues)
+
+    @property
+    def incomplete_clues(self) -> list[Clue]:
+        return set(self.__clues) - set(self.completed_clues)
 
     def __get_clues(self, p: puz.Puzzle) -> list[Clue]:
         numbering = p.clue_numbering()
@@ -95,20 +99,20 @@ class CrosswordPuzzle:
             )
 
         grid_slice[:] = answer_arr
-        self.__filled_in_clues.add(clue)
+        self.completed_clues.append(clue)
 
     def remove_answer(self, clue: Clue) -> None:
-        if clue not in self.__filled_in_clues:
+        if clue not in self.completed_clues:
             raise ValueError("Cannot remove answer because clue is not filled in")
 
         overlap_grid_slice = self.__get_overlap_grid_slice(clue)
         current_clue_letter_grid_slice = self.__get_letter_grid_slice(clue)
 
         for idx, overlapping_clues in enumerate(overlap_grid_slice):
-            if any(c not in self.__filled_in_clues for c in overlapping_clues if c != clue):
+            if any(c not in self.completed_clues for c in overlapping_clues if c != clue):
                 current_clue_letter_grid_slice[idx] = UNKNOWN_LETTER
 
-        self.__filled_in_clues.remove(clue)
+        self.completed_clues.remove(clue)
 
     def print_grid(self) -> None:
         for letter_row, overlap_row in zip(self.__letter_grid, self.__overlap_grid, strict=False):
@@ -133,3 +137,9 @@ class CrosswordPuzzle:
 
     def get_solution(self, clue: Clue) -> str:
         return self.__solutions[clue.id]
+
+    def __number_of_known_letters(self, clue: Clue) -> int:
+        return sum(1 for letter in self.get_pattern(clue) if letter != UNKNOWN_LETTER)
+
+    def get_number_of_known_letters_for_all_clues(self) -> dict[CLUE_ID, int]:
+        return {clue.id: self.__number_of_known_letters(clue) for clue in self.__clues}
