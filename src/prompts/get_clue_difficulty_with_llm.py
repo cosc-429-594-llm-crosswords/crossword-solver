@@ -28,13 +28,12 @@ def __get_llm() -> Ollama:
     return Ollama(
         model=LLM_MODEL,
         request_timeout=1200.0,
-        context_window=1000,
         temperature=0.0,
         json_mode=True,
     )
 
 
-def __missing_clues(clues: list[Clue], difficulty_scores: dict[CLUE_ID, int]) -> list[Clue]:
+def __missing_clues(clues: list[Clue], difficulty_scores: dict[CLUE_ID]) -> list[Clue]:
     return [clue for clue in clues if clue.id not in difficulty_scores]
 
 
