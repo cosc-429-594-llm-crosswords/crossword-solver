@@ -47,7 +47,7 @@ Vagueness score: 10
 Complexity score: 20
 Explanation: There is only one obvious answer ("IKEA"), but requires some cultural knowledge.
 
-Here are your clues to score:
+Here are the clues to score:
 {% for clue in clues %}
 - ({{ clue.number }} {{ clue.direction }}): {{ clue.text }} ({{ clue.length }} letters)
 {% endfor %}
@@ -61,14 +61,14 @@ def __get_llm() -> Ollama:
         model=LLM_MODEL,
         request_timeout=1200.0,
         json_mode=True,
-        context_window=8000,
-        temperature=0,
-        top_p=1,
-        top_k=1,
+        temperature=0.1,
+        top_p=0.9,
+        top_k=5,
     )
 
 
 def __missing_clues(clues: list[Clue], difficulty_scores: dict[CLUE_ID]) -> list[Clue]:
+    print("missing clues here")
     return [clue for clue in clues if clue.id not in difficulty_scores]
 
 
@@ -88,6 +88,7 @@ def __get_difficulty_score(ranked_clue: RankedClue, debug: bool = False) -> int:
 
 
 def __calculate_difficulty_scores(clues: list[Clue], debug: bool = False) -> dict[CLUE_ID, int]:
+    print("test 1")
     llm = __get_llm()
 
     difficulty_scores: dict[CLUE_ID, int] = {}
@@ -111,6 +112,7 @@ def __calculate_difficulty_scores(clues: list[Clue], debug: bool = False) -> dic
             PROMPT_TEMPLATE,
             clues=clues_to_score,
         )
+        print(ranked_clues)
         for ranked_clue in ranked_clues.ranked_clues:
             clue_id: CLUE_ID = (ranked_clue.number, ranked_clue.direction)
             difficulty_scores[clue_id] = __get_difficulty_score(ranked_clue, debug)
@@ -133,4 +135,5 @@ def get_clue_difficulty_with_llm(clues: list[Clue], debug: bool = False) -> dict
             print(
                 f"Clue ({clue.number} {clue.direction}): Difficulty Score = {score} | {clue.text}"
             )
+    print(difficulty_scores)
     return difficulty_scores
