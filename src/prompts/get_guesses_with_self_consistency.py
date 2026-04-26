@@ -5,11 +5,11 @@ from llama_index.llms.ollama import Ollama
 
 from src.classes.clue import Clue
 from src.classes.guesses import Guess, Guesses
-from src.constants import LLM_MODEL
+from src.constants import LLM_MODEL, DEFAULT_NUM_SAMPLES, DEFAULT_MAX_GUESSES
 
 PROMPT_TEMPLATE = RichPromptTemplate(
     """
-You are a crossword solver. Provide up to five unique guesses matching the clue and pattern.
+You are a crossword expert. Provide up to five different guesses that fit the clue and pattern.
 Constraints:
 - Clue: {{ clue_text }}
 - Length: {{ pattern_length }} letters
@@ -17,12 +17,11 @@ Constraints:
 {{ pattern_text }}
 
 Final Output:
-Return only the matching words in ALL CAPS, a confidence score (0-100), and an explanation. Every letter used must be in the English alphabet. 
+Return only your guesses in ALL CAPS, a confidence score (0-100), and an explanation. Every letter used must be in the English alphabet. 
 No spaces, numbers, or punctuation in guesses. 
 Do not hallucinate. Every guess MUST be a real word and MUST have a reasonable explanation that fits the guess.
-If a word generated has a confidence score of 95 or above but does not fit the pattern constraint, ignore the pattern constraint and fill in the puzzle with the word.
 If a letter in the word has an accent mark on it, but has a common alternative in the English alphabet, use the English letter instead.
-If abbreviate, abbreviation, abbr., or abbrev. are not specified in the clue, then DO NOT abbreviate the answer to fit the pattern.
+If abbreviate, abbreviation, abbr., or abbrev. are not specified in the clue, then DO NOT abbreviate the guess to fit the pattern.
 """.strip()
 )
 
@@ -121,8 +120,8 @@ def __get_guesses_for_clue_using_llm(
 def get_guesses_with_self_consistency(
     clue,
     pattern: list[str],
-    num_samples: int = 3,
-    max_guesses: int = 5,
+    num_samples: int = DEFAULT_NUM_SAMPLES,
+    max_guesses: int = DEFAULT_MAX_GUESSES,
     debug: bool = False,
 ) -> list[Guess]:
     all_runs: list[list[Guess]] = []

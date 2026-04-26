@@ -3,6 +3,10 @@ from typing import Literal, TypeAlias
 # LLM_MODEL = "gemma4:e4b"
 LLM_MODEL = "llama3.1:latest"
 
+# self-consistency parameters
+DEFAULT_NUM_SAMPLES = 3
+DEFAULT_MAX_GUESSES = 5
+
 PUZ_FILE_DIR = "puz_files"
 PUZ_FILE_DIR2 = "goobix_puzzles"
 DIRECTIONS: TypeAlias = Literal["across", "down"]

@@ -9,8 +9,8 @@ class Clue:
     length: int
     number: int
     direction: DIRECTIONS
-    row: int
-    col: int
+    row: int = 0
+    col: int = 0
 
     @property
     def id(self) -> CLUE_ID:
