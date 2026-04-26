@@ -17,11 +17,12 @@ Constraints:
 {{ pattern_text }}
 
 Final Output:
-Return only the matching words in ALL CAPS, a confidence score (0-100), and an explanation.
-No spaces or punctuation in guesses.
-Do not hallucinate. Every answer must have a reasonable explanation.
+Return only the matching words in ALL CAPS, a confidence score (0-100), and an explanation. Every letter used must be in the English alphabet. 
+No spaces, numbers, or punctuation in guesses. 
+Do not hallucinate. Every guess MUST be a real word and MUST have a reasonable explanation that fits the guess.
 If a word generated has a confidence score of 95 or above but does not fit the pattern constraint, ignore the pattern constraint and fill in the puzzle with the word.
-If abbreviate, abbreviation, abbr., or abbrev. are not specified in the clue, then do not abbreviate the answer to fit the pattern.
+If a letter in the word has an accent mark on it, but has a common alternative in the English alphabet, use the English letter instead.
+If abbreviate, abbreviation, abbr., or abbrev. are not specified in the clue, then DO NOT abbreviate the answer to fit the pattern.
 """.strip()
 )
 
@@ -34,7 +35,7 @@ def __get_llm() -> Ollama:
         context_window=1000,
         json_mode=True,
         temperature=0.1,
-        top_p=0.9,
+        top_p=1,
         top_k=5,
     )
 
@@ -84,7 +85,7 @@ def __filter_invalid_guesses(guesses: list[Guess], pattern: list[str]) -> list[G
     return valid_guesses
 
 
-def get_guesses_for_clue_using_llm(
+def __get_guesses_for_clue_using_llm(
     clue: Clue, pattern: list[str], debug: bool = False
 ) -> list[Guess]:
     llm = __get_llm()
@@ -116,3 +117,51 @@ def get_guesses_for_clue_using_llm(
             print(f"{guess.answer} (confidence: {guess.confidence_score}) - {guess.explanation}")
 
     return __filter_invalid_guesses(response.guesses, pattern)
+
+def get_guesses_with_self_consistency(
+    clue,
+    pattern: list[str],
+    num_samples: int = 3,
+    max_guesses: int = 5,
+    debug: bool = False,
+) -> list[Guess]:
+    all_runs: list[list[Guess]] = []
+
+    for i in range(num_samples):
+        if debug:
+            print(f"  [Self-consistency] Sample {i+1}/{num_samples}...")
+        run_guesses = __get_guesses_for_clue_using_llm(clue, pattern, debug=debug)
+
+        all_runs.append(run_guesses)
+
+    answer_scores: dict[str, list[float]] = {}
+    answer_explanations: dict[str, str] = {}
+
+    for run in all_runs:
+        for guess in run:
+            key = guess.answer.upper().strip()
+            if key not in answer_scores:
+                answer_scores[key] = []
+                answer_explanations[key] = guess.explanation
+            answer_scores[key].append(guess.confidence_score)
+
+    aggregated: list[Guess] = []
+    for answer, scores in answer_scores.items():
+        mean_confidence = int(round(sum(scores) / num_samples, 0))
+
+        aggregated.append(Guess(
+            answer=answer,
+            confidence_score=mean_confidence,
+            explanation=answer_explanations[answer],
+        ))
+
+    aggregated.sort(key=lambda g: g.confidence_score, reverse=True)
+    top_guesses = aggregated[:max_guesses]
+
+    if debug:
+        print(f"  [Self-consistency] Aggregated {len(answer_scores)} unique answers → top {len(top_guesses)}:")
+        for g in top_guesses:
+            freq_count = len(answer_scores[g.answer.upper().strip()])
+            print(f"    {g.answer} | score={g.confidence_score} | appeared in {freq_count}/{num_samples} runs")
+
+    return top_guesses

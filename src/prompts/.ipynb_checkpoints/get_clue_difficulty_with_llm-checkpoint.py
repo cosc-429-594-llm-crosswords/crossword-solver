@@ -24,13 +24,13 @@ Example Clues:
 
 Chinese-zodiac animal (5 letters)
 Vagueness score: 80
-Complexity score: 20
+Complexity score: 10
 Explanation: This clue is very vague, because there are multiple 5 letter Chinese zodiac animals ("HORSE", "TIGER", "SNAKE"), but it is not difficult because it does not require any obscure knowledge, or multiple steps of reasoning.
 
 The "p" of m.p.h (3 letters)
 Vagueness score: 10
-Complexity score: 10
-Explanation: The answer to this clue is obvious, because there is only one standard interpretation for m.p.h.. It is not difficult, because this is common knowledge.
+Complexity score: 40
+Explanation: The answer to this clue is obvious, because there is only one standard interpretation for m.p.h.. It is not difficult, but complexity is higher because it requires two steps of reasoning: m.p.h commonly means miles per hour => the 'p' in m.p.h. means per
 
 Reason to edit a text message (4 letters)
 Vagueness score: 100
@@ -39,7 +39,7 @@ Explanation: With 4 letters, there are many plausible answers ("TYPO", "EDIT", "
 
 Quickly change the topic (5 letters)
 Vagueness score: 100
-Complexity score: 25
+Complexity score: 50
 Explanation: Multiple valid synonyms exist ("PIVOT", "EVADE", "SEGUE", "SHIFT", etc.), making it very vague. It's mildly more complex because the solver may need to think in terms of idiomatic expressions rather than a direct synonym.
 
 Swedish furniture giant (4 letters)
@@ -47,7 +47,7 @@ Vagueness score: 10
 Complexity score: 20
 Explanation: There is only one obvious answer ("IKEA"), but requires some cultural knowledge.
 
-Here are the clues to score:
+Here are your clues to score:
 {% for clue in clues %}
 - ({{ clue.number }} {{ clue.direction }}): {{ clue.text }} ({{ clue.length }} letters)
 {% endfor %}
@@ -61,14 +61,14 @@ def __get_llm() -> Ollama:
         model=LLM_MODEL,
         request_timeout=1200.0,
         json_mode=True,
-        temperature=0.1,
-        top_p=0.9,
-        top_k=5,
+        context_window=8000,
+        temperature=0,
+        top_p=1,
+        top_k=1,
     )
 
 
 def __missing_clues(clues: list[Clue], difficulty_scores: dict[CLUE_ID]) -> list[Clue]:
-    print("missing clues here")
     return [clue for clue in clues if clue.id not in difficulty_scores]
 
 
@@ -88,7 +88,6 @@ def __get_difficulty_score(ranked_clue: RankedClue, debug: bool = False) -> int:
 
 
 def __calculate_difficulty_scores(clues: list[Clue], debug: bool = False) -> dict[CLUE_ID, int]:
-    print("test 1")
     llm = __get_llm()
 
     difficulty_scores: dict[CLUE_ID, int] = {}
@@ -112,7 +111,6 @@ def __calculate_difficulty_scores(clues: list[Clue], debug: bool = False) -> dic
             PROMPT_TEMPLATE,
             clues=clues_to_score,
         )
-        print(ranked_clues)
         for ranked_clue in ranked_clues.ranked_clues:
             clue_id: CLUE_ID = (ranked_clue.number, ranked_clue.direction)
             difficulty_scores[clue_id] = __get_difficulty_score(ranked_clue, debug)
@@ -135,5 +133,4 @@ def get_clue_difficulty_with_llm(clues: list[Clue], debug: bool = False) -> dict
             print(
                 f"Clue ({clue.number} {clue.direction}): Difficulty Score = {score} | {clue.text}"
             )
-    print(difficulty_scores)
     return difficulty_scores

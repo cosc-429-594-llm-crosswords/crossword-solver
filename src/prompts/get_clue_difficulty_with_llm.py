@@ -24,13 +24,13 @@ Example Clues:
 
 Chinese-zodiac animal (5 letters)
 Vagueness score: 80
-Complexity score: 20
+Complexity score: 10
 Explanation: This clue is very vague, because there are multiple 5 letter Chinese zodiac animals ("HORSE", "TIGER", "SNAKE"), but it is not difficult because it does not require any obscure knowledge, or multiple steps of reasoning.
 
 The "p" of m.p.h (3 letters)
 Vagueness score: 10
-Complexity score: 10
-Explanation: The answer to this clue is obvious, because there is only one standard interpretation for m.p.h.. It is not difficult, because this is common knowledge.
+Complexity score: 40
+Explanation: The answer to this clue is obvious, because there is only one standard interpretation for m.p.h.. It is not difficult, but complexity is higher because it requires two steps of reasoning: m.p.h commonly means miles per hour => the 'p' in m.p.h. means per
 
 Reason to edit a text message (4 letters)
 Vagueness score: 100
@@ -39,7 +39,7 @@ Explanation: With 4 letters, there are many plausible answers ("TYPO", "EDIT", "
 
 Quickly change the topic (5 letters)
 Vagueness score: 100
-Complexity score: 25
+Complexity score: 50
 Explanation: Multiple valid synonyms exist ("PIVOT", "EVADE", "SEGUE", "SHIFT", etc.), making it very vague. It's mildly more complex because the solver may need to think in terms of idiomatic expressions rather than a direct synonym.
 
 Swedish furniture giant (4 letters)
