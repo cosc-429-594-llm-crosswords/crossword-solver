@@ -13,3 +13,4 @@ puz_files/
 goobix_puzzles/
 
 *.puz
+*.csv
