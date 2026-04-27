@@ -9,6 +9,7 @@ DEFAULT_MAX_GUESSES = 5
 
 PUZ_FILE_DIR = "puz_files"
 PUZ_FILE_DIR2 = "goobix_puzzles"
+CROSSHARE_PUZ_DIR = "crosshare_puz_files"
 DIRECTIONS: TypeAlias = Literal["across", "down"]
 UNKNOWN_LETTER = "_"
 LETTERS: TypeAlias = Literal[
