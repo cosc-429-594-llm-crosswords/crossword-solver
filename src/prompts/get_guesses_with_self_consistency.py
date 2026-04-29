@@ -5,7 +5,7 @@ from llama_index.llms.ollama import Ollama
 
 from src.classes.clue import Clue
 from src.classes.guesses import Guess, Guesses
-from src.constants import LLM_MODEL, DEFAULT_NUM_SAMPLES, DEFAULT_MAX_GUESSES
+from src.constants import DEFAULT_MAX_GUESSES, DEFAULT_NUM_SAMPLES, LLM_MODEL
 
 PROMPT_TEMPLATE = RichPromptTemplate(
     """
@@ -87,35 +87,41 @@ def __filter_invalid_guesses(guesses: list[Guess], pattern: list[str]) -> list[G
 def __get_guesses_for_clue_using_llm(
     clue: Clue, pattern: list[str], debug: bool = False
 ) -> list[Guess]:
-    llm = __get_llm()
-    pattern_text = __generate_pattern_text(pattern)
+    try:
+        llm = __get_llm()
+        pattern_text = __generate_pattern_text(pattern)
 
-    if debug:
-        print(f"=== GENERATE GUESSES with {LLM_MODEL} ===")
-        print(
-            PROMPT_TEMPLATE.format(
-                clue_text=clue.text,
-                pattern_length=clue.length,
-                pattern_text=pattern_text,
+        if debug:
+            print(f"=== GENERATE GUESSES with {LLM_MODEL} ===")
+            print(
+                PROMPT_TEMPLATE.format(
+                    clue_text=clue.text,
+                    pattern_length=clue.length,
+                    pattern_text=pattern_text,
+                )
             )
+
+        response: Guesses = llm.structured_predict(
+            Guesses,
+            PROMPT_TEMPLATE,
+            clue_text=clue.text,
+            pattern_length=clue.length,
+            pattern_text=pattern_text,
         )
 
-    response: Guesses = llm.structured_predict(
-        Guesses,
-        PROMPT_TEMPLATE,
-        clue_text=clue.text,
-        pattern_length=clue.length,
-        pattern_text=pattern_text,
-    )
+        response.guesses.sort(key=lambda x: x.confidence_score, reverse=True)
 
-    response.guesses.sort(key=lambda x: x.confidence_score, reverse=True)
+        if debug:
+            print(f"=== GENERATED GUESSES with {LLM_MODEL} ===")
+            for guess in response.guesses:
+                print(
+                    f"{guess.answer} (confidence: {guess.confidence_score}) - {guess.explanation}"
+                )
 
-    if debug:
-        print(f"=== GENERATED GUESSES with {LLM_MODEL} ===")
-        for guess in response.guesses:
-            print(f"{guess.answer} (confidence: {guess.confidence_score}) - {guess.explanation}")
+        return __filter_invalid_guesses(response.guesses, pattern)
+    except Exception:
+        return []
 
-    return __filter_invalid_guesses(response.guesses, pattern)
 
 def get_guesses_with_self_consistency(
     clue,
@@ -128,7 +134,7 @@ def get_guesses_with_self_consistency(
 
     for i in range(num_samples):
         if debug:
-            print(f"  [Self-consistency] Sample {i+1}/{num_samples}...")
+            print(f"  [Self-consistency] Sample {i + 1}/{num_samples}...")
         run_guesses = __get_guesses_for_clue_using_llm(clue, pattern, debug=debug)
 
         all_runs.append(run_guesses)
@@ -148,19 +154,25 @@ def get_guesses_with_self_consistency(
     for answer, scores in answer_scores.items():
         mean_confidence = int(round(sum(scores) / num_samples, 0))
 
-        aggregated.append(Guess(
-            answer=answer,
-            confidence_score=mean_confidence,
-            explanation=answer_explanations[answer],
-        ))
+        aggregated.append(
+            Guess(
+                answer=answer,
+                confidence_score=mean_confidence,
+                explanation=answer_explanations[answer],
+            )
+        )
 
     aggregated.sort(key=lambda g: g.confidence_score, reverse=True)
     top_guesses = aggregated[:max_guesses]
 
     if debug:
-        print(f"  [Self-consistency] Aggregated {len(answer_scores)} unique answers → top {len(top_guesses)}:")
+        print(
+            f"  [Self-consistency] Aggregated {len(answer_scores)} unique answers → top {len(top_guesses)}:"
+        )
         for g in top_guesses:
             freq_count = len(answer_scores[g.answer.upper().strip()])
-            print(f"    {g.answer} | score={g.confidence_score} | appeared in {freq_count}/{num_samples} runs")
+            print(
+                f"    {g.answer} | score={g.confidence_score} | appeared in {freq_count}/{num_samples} runs"
+            )
 
     return top_guesses
