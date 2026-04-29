@@ -23,12 +23,12 @@ You are a crossword expert. Provide up to five potential answers for the followi
 <Constraints>
 - Clue: {{ clue_text }}
 - Length: {{ pattern_length }} letters
-- Pattern: 
+- Pattern:
 {{ pattern_text }}
 </Constraints>
 
 <Instructions>
-1. **Read the clue carefully.** Consider all interpretations, including literal meanings, synonyms, and wordplay.
+1. **READ THE CLUE CAREFULLY.** Consider all interpretations, including literal meanings, synonyms, and wordplay.
 2. **INDEPENDENT BRAINSTORM:** Before looking at suggestions, generate your own list of valid English words that fit the length, pattern, and thematic essence of the clue.
 3. **API EVALUATION:** Review the provided Suggestions list if it is available. If the list is empty or the words are logically weak, rely on your internal brainstormed words. 
 4. **FINAL SELECTION:** Pick words that most logically fit. If the clue has a QUESTION MARK (?), prioritize puns, literalisms (e.g., "Stocking stuffer" = SANTA), or double meanings. Look for the "hidden gem" in the list that fits the theme perfectly.
@@ -42,6 +42,8 @@ You are a crossword expert. Provide up to five potential answers for the followi
 4. **LOGIC:** The explanation must be a full sentence (5+ characters) justifying the connection between the word and the clue.
 5. **NO DUPLICATES:** Do not include the same word more than once in your response.
 6. **NO ANSWERS IN CLUES:** Clues do not contain the answer within them. Avoid selecting words that are directly mentioned in the clue.
+7. **CLEAN OUTPUT:** Ensure that the output answer does not contain spaces, numbers, or special characters.
+8. **NO HALLUCINATIONS:** Do not generate words that do not exist or don't make logical sense with the clue.
 </Guidelines>
 
 <Suggestions>
@@ -158,11 +160,11 @@ def __filter_invalid_guesses(guesses: list[Guess], pattern: list[str]) -> list[G
 
 
 def __get_guesses_for_clue_using_llm(
-    clue: Clue, pattern: list[str], debug: bool = False
+    clue: Clue, pattern: list[str], include_suggestions: bool = False, debug: bool = False
 ) -> list[Guess]:
     llm = __get_llm()
     pattern_text = __generate_pattern_text(pattern)
-    suggestions = __get_suggestions(pattern)
+    suggestions = __get_suggestions(pattern) if include_suggestions else []
 
     if debug:
         print(f"=== GENERATE GUESSES with {LLM_MODEL} ===")
@@ -199,6 +201,7 @@ def get_guesses_with_self_consistency(
     pattern: list[str],
     num_samples: int = DEFAULT_NUM_SAMPLES,
     max_guesses: int = DEFAULT_MAX_GUESSES,
+    include_suggestions: bool = False,
     debug: bool = False,
 ) -> list[Guess]:
     all_runs: list[list[Guess]] = []
@@ -206,7 +209,9 @@ def get_guesses_with_self_consistency(
     for i in range(num_samples):
         if debug:
             print(f"  [Self-consistency] Sample {i + 1}/{num_samples}...")
-        run_guesses = __get_guesses_for_clue_using_llm(clue, pattern, debug=debug)
+        run_guesses = __get_guesses_for_clue_using_llm(
+            clue, pattern, include_suggestions=include_suggestions, debug=debug
+        )
 
         all_runs.append(run_guesses)
 
