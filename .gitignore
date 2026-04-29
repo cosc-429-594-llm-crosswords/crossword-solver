@@ -9,8 +9,11 @@ wheels/
 # Virtual environments
 .venv
 
+# Data files
 puz_files/
 goobix_puzzles/
+data/
+logs/
 
 *.puz
 *.csv

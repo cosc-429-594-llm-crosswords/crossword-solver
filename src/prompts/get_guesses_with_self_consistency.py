@@ -1,3 +1,4 @@
+import os
 from functools import cache
 
 import requests
@@ -103,8 +104,10 @@ def __get_suggestions(pattern: list[LETTERS]) -> list[dict[str, str | int]]:
 
 @cache
 def __get_llm() -> Ollama:
+    ollama_host = os.environ.get("OLLAMA_HOST", "127.0.0.1:11434")
     llm = Ollama(
         model=LLM_MODEL,
+        base_url=f"http://{ollama_host}",
         request_timeout=1200.0,
         context_window=1000,
         json_mode=True,
@@ -159,8 +162,8 @@ def __filter_invalid_guesses(guesses: list[Guess], pattern: list[str]) -> list[G
     return list(valid_guesses)
 
 
-def __get_guesses_for_clue_using_llm(
-    clue: Clue, pattern: list[str], include_suggestions: bool = False, debug: bool = False
+def get_guesses_for_clue_using_llm(
+    clue: Clue, pattern: list[str], filter: bool, debug: bool, include_suggestions: bool = False
 ) -> list[Guess]:
     llm = __get_llm()
     pattern_text = __generate_pattern_text(pattern)
@@ -193,7 +196,10 @@ def __get_guesses_for_clue_using_llm(
         for guess in response.guesses:
             print(f"{guess.answer} (confidence: {guess.confidence_score}) - {guess.explanation}")
 
-    return __filter_invalid_guesses(response.guesses, pattern)
+    if filter:
+        return __filter_invalid_guesses(response.guesses, pattern)
+    else: 
+        return(response.guesses)
 
 
 def get_guesses_with_self_consistency(
@@ -201,6 +207,7 @@ def get_guesses_with_self_consistency(
     pattern: list[str],
     num_samples: int = DEFAULT_NUM_SAMPLES,
     max_guesses: int = DEFAULT_MAX_GUESSES,
+    filter: bool = True,
     include_suggestions: bool = False,
     debug: bool = False,
 ) -> list[Guess]:
@@ -209,8 +216,8 @@ def get_guesses_with_self_consistency(
     for i in range(num_samples):
         if debug:
             print(f"  [Self-consistency] Sample {i + 1}/{num_samples}...")
-        run_guesses = __get_guesses_for_clue_using_llm(
-            clue, pattern, include_suggestions=include_suggestions, debug=debug
+        run_guesses = get_guesses_for_clue_using_llm(
+            clue, pattern, filter=filter, debug=debug, include_suggestions=include_suggestions
         )
 
         all_runs.append(run_guesses)
