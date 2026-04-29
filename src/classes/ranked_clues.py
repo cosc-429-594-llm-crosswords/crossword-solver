@@ -1,9 +1,18 @@
+from enum import StrEnum
+
 from llama_index.core.bridge.pydantic import BaseModel, Field
+
+
+class Direction(StrEnum):
+    across = "across"
+    down = "down"
 
 
 class RankedClue(BaseModel):
     number: int = Field(description="The clue number as it appears in the crossword puzzle.")
-    direction: str = Field(description="The direction of the clue, either 'across' or 'down'.")
+    direction: Direction = Field(
+        description="The direction of the clue, either 'across' or 'down'."
+    )
     explanation: str = Field(
         description="A brief explanation of why this clue is considered difficult, based on factors such as ambiguity, wordplay, or obscurity."
     )

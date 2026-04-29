@@ -7,8 +7,8 @@ from src.classes.clue import Clue
 from src.classes.ranked_clues import RankedClue, RankedClues
 from src.constants import CLUE_ID, LLM_MODEL
 
-VAGUENESS_WEIGHT = 0.75
-COMPLEXITY_WEIGHT = 0.25
+VAGUENESS_WEIGHT = 0.67
+COMPLEXITY_WEIGHT = 0.33
 
 PROMPT_TEMPLATE = RichPromptTemplate(
     """
@@ -23,28 +23,28 @@ Clues are more complex when they require multiple steps of reasoning, involve in
 Example Clues:
 
 Chinese-zodiac animal (5 letters)
-Vagueness score: 80
-Complexity score: 10
+Vagueness score: 82
+Complexity score: 11
 Explanation: This clue is very vague, because there are multiple 5 letter Chinese zodiac animals ("HORSE", "TIGER", "SNAKE"), but it is not difficult because it does not require any obscure knowledge, or multiple steps of reasoning.
 
 The "p" of m.p.h (3 letters)
-Vagueness score: 10
-Complexity score: 40
+Vagueness score: 19
+Complexity score: 42
 Explanation: The answer to this clue is obvious, because there is only one standard interpretation for m.p.h.. It is not difficult, but complexity is higher because it requires two steps of reasoning: m.p.h commonly means miles per hour => the 'p' in m.p.h. means per
 
 Reason to edit a text message (4 letters)
 Vagueness score: 100
-Complexity score: 20
+Complexity score: 27
 Explanation: With 4 letters, there are many plausible answers ("TYPO", "EDIT", "OOPS", "REDO", etc.). The clue remains quite open-ended. Complexity is low since it's a straightforward conceptual clue without wordplay.
 
 Quickly change the topic (5 letters)
 Vagueness score: 100
-Complexity score: 50
+Complexity score: 56
 Explanation: Multiple valid synonyms exist ("PIVOT", "EVADE", "SEGUE", "SHIFT", etc.), making it very vague. It's mildly more complex because the solver may need to think in terms of idiomatic expressions rather than a direct synonym.
 
 Swedish furniture giant (4 letters)
-Vagueness score: 10
-Complexity score: 20
+Vagueness score: 16
+Complexity score: 24
 Explanation: There is only one obvious answer ("IKEA"), but requires some cultural knowledge.
 
 Here are your clues to score:
@@ -75,13 +75,13 @@ def __missing_clues(clues: list[Clue], difficulty_scores: dict[CLUE_ID]) -> list
 def __get_difficulty_score(ranked_clue: RankedClue, debug: bool = False) -> int:
     if debug:
         print(
-            f"""Scored Clue ({ranked_clue.number} {ranked_clue.direction}): 
-            - Vagueness Score = {ranked_clue.vagueness_score}, 
-            - Complexity Score = {ranked_clue.complex_score}
+            f"""Scored Clue ({ranked_clue.number} {ranked_clue.direction}):
+            - Vagueness Score = {ranked_clue.vagueness_score},
+            - Complexity Score = {ranked_clue.complex_score},
             - Explanation: {ranked_clue.explanation}"""
         )
 
-    return (
+    return int(
         VAGUENESS_WEIGHT * ranked_clue.vagueness_score
         + COMPLEXITY_WEIGHT * ranked_clue.complex_score
     )
@@ -114,7 +114,7 @@ def __calculate_difficulty_scores(clues: list[Clue], debug: bool = False) -> dic
         for ranked_clue in ranked_clues.ranked_clues:
             clue_id: CLUE_ID = (ranked_clue.number, ranked_clue.direction)
             difficulty_scores[clue_id] = __get_difficulty_score(ranked_clue, debug)
-        
+
         clues_to_score = __missing_clues(clues, difficulty_scores)
     return difficulty_scores
 
