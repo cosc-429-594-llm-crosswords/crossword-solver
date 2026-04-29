@@ -162,7 +162,7 @@ def __filter_invalid_guesses(guesses: list[Guess], pattern: list[str]) -> list[G
     return list(valid_guesses)
 
 
-def __get_guesses_for_clue_using_llm(
+def get_guesses_for_clue_using_llm(
     clue: Clue, pattern: list[str], filter: bool, debug: bool, include_suggestions: bool = False
 ) -> list[Guess]:
     llm = __get_llm()
@@ -216,7 +216,7 @@ def get_guesses_with_self_consistency(
     for i in range(num_samples):
         if debug:
             print(f"  [Self-consistency] Sample {i + 1}/{num_samples}...")
-        run_guesses = __get_guesses_for_clue_using_llm(
+        run_guesses = get_guesses_for_clue_using_llm(
             clue, pattern, filter=filter, debug=debug, include_suggestions=include_suggestions
         )
 

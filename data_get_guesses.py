@@ -17,6 +17,7 @@ NUM_FILLED = 0       # Must be less than CLUE_LENGTH
 NUM_CLUES = 2       # Must be an int or "All"
 DAY_OF_WEEK = "Monday"  # "All", "Monday", ..., "Sunday"
 SELF_CONSISTENCY = True
+SUGGESTIONS = True
 
 # Ignore these
 VALID_DAYS = {"All", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}
@@ -34,6 +35,7 @@ class ExperimentConfig:
     num_clues: int | str
     day_of_week: str
     self_consistency: bool
+    suggestions: bool
 
     def validate(self) -> None:
         if self.day_of_week not in VALID_DAYS:
@@ -42,10 +44,12 @@ class ExperimentConfig:
             _exit("NUM_FILLED must be strictly less than CLUE_LENGTH.")
         if not isinstance(self.num_clues, int) and self.num_clues != "All":
             _exit("NUM_CLUES must be an integer or 'All'.")
+        if self.suggestions and not self.self_consistency:
+            _exit("Suggestions can only be used with self-consistency.")
 
     @property
     def output_path(self) -> str:
-        return os.path.join(OUTPUT_DIR, f"test_sc_{self.self_consistency}_clues_{self.num_clues}_{self.day_of_week}_fill_{self.num_filled}_length_{self.clue_length}.csv")
+        return os.path.join(OUTPUT_DIR, f"test_sc_{self.self_consistency}_sugg_{self.suggestions}_clues_{self.num_clues}_{self.day_of_week}_fill_{self.num_filled}_length_{self.clue_length}.csv")
 
 
 def parse_args() -> ExperimentConfig:
@@ -55,6 +59,7 @@ def parse_args() -> ExperimentConfig:
     parser.add_argument("--num-clues", default="All")  # int or "All"
     parser.add_argument("--day-of-week", default="All")
     parser.add_argument("--self-consistency", action="store_true")
+    parser.add_argument("--suggestions", action="store_true")
     args = parser.parse_args()
     return ExperimentConfig(
         clue_length=args.clue_length,
@@ -62,6 +67,7 @@ def parse_args() -> ExperimentConfig:
         num_clues=int(args.num_clues) if args.num_clues != "All" else "All",
         day_of_week=args.day_of_week,
         self_consistency=args.self_consistency,
+        suggestions=args.suggestions,
     )
 
 
@@ -108,11 +114,11 @@ class GuessResult:
     top5_correct: bool = False
 
 
-def evaluate_clue(clue: Clue, pattern: list[str], solution: str, self_consistency: bool) -> GuessResult:
+def evaluate_clue(clue: Clue, pattern: list[str], solution: str, self_consistency: bool, suggestions: bool) -> GuessResult:
     result = GuessResult()
 
     if self_consistency:
-        clue_guesses = get_guesses_with_self_consistency(clue, pattern, filter=False, debug=True)
+        clue_guesses = get_guesses_with_self_consistency(clue, pattern, filter=False, debug=True, include_suggestions=suggestions)
     else: 
         clue_guesses = get_guesses_for_clue_using_llm(clue, pattern, filter=False, debug=True)
 
@@ -173,7 +179,7 @@ def main() -> None:
         )
         solution = row["solution"]
         pattern = build_pattern(solution, config.num_filled)
-        result = evaluate_clue(clue, pattern, solution, config.self_consistency)
+        result = evaluate_clue(clue, pattern, solution, config.self_consistency, config.suggestions)
 
         if result.top1_correct:
             top1_success += 1
