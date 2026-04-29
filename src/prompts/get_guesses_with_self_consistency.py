@@ -165,41 +165,47 @@ def __filter_invalid_guesses(guesses: list[Guess], pattern: list[str]) -> list[G
 def get_guesses_for_clue_using_llm(
     clue: Clue, pattern: list[str], filter: bool, debug: bool, include_suggestions: bool = False
 ) -> list[Guess]:
-    llm = __get_llm()
-    pattern_text = __generate_pattern_text(pattern)
-    suggestions = __get_suggestions(pattern) if include_suggestions else []
+    try:
+        llm = __get_llm()
+        pattern_text = __generate_pattern_text(pattern)
+        suggestions = __get_suggestions(pattern) if include_suggestions else []
 
-    if debug:
-        print(f"=== GENERATE GUESSES with {LLM_MODEL} ===")
-        print(
-            PROMPT_TEMPLATE.format(
-                clue_text=clue.text,
-                pattern_length=clue.length,
-                pattern_text=pattern_text,
-                suggestions=suggestions,
+        if debug:
+            print(f"=== GENERATE GUESSES with {LLM_MODEL} ===")
+            print(
+                PROMPT_TEMPLATE.format(
+                    clue_text=clue.text,
+                    pattern_length=clue.length,
+                    pattern_text=pattern_text,
+                    suggestions=suggestions,
+                )
             )
+
+        response: Guesses = llm.structured_predict(
+            Guesses,
+            PROMPT_TEMPLATE,
+            clue_text=clue.text,
+            pattern_length=clue.length,
+            pattern_text=pattern_text,
+            suggestions=suggestions,
         )
 
-    response: Guesses = llm.structured_predict(
-        Guesses,
-        PROMPT_TEMPLATE,
-        clue_text=clue.text,
-        pattern_length=clue.length,
-        pattern_text=pattern_text,
-        suggestions=suggestions,
-    )
+        response.guesses.sort(key=lambda x: x.confidence_score, reverse=True)
 
-    response.guesses.sort(key=lambda x: x.confidence_score, reverse=True)
+        if debug:
+            print(f"=== GENERATED GUESSES with {LLM_MODEL} ===")
+            for guess in response.guesses:
+                print(
+                    f"{guess.answer} (confidence: {guess.confidence_score}) - {guess.explanation}"
+                )
 
-    if debug:
-        print(f"=== GENERATED GUESSES with {LLM_MODEL} ===")
-        for guess in response.guesses:
-            print(f"{guess.answer} (confidence: {guess.confidence_score}) - {guess.explanation}")
-
-    if filter:
-        return __filter_invalid_guesses(response.guesses, pattern)
-    else: 
-        return(response.guesses)
+        if filter:
+            return __filter_invalid_guesses(response.guesses, pattern)
+        else:
+            return response.guesses
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return []
 
 
 def get_guesses_with_self_consistency(
