@@ -2,9 +2,7 @@
 --clue-length 5 --num-filled 1 --day-of-week Monday --num-clues 50 --self-consistency True
 --clue-length 5 --num-filled 2 --day-of-week Monday --num-clues 50 --self-consistency True
 --clue-length 5 --num-filled 3 --day-of-week Monday --num-clues 50 --self-consistency True
---clue-length 5 --num-filled 4 --day-of-week Monday --num-clues 50 --self-consistency True
 --clue-length 5 --num-filled 0 --day-of-week Monday --num-clues 50 --self-consistency False
 --clue-length 5 --num-filled 1 --day-of-week Monday --num-clues 50 --self-consistency False
 --clue-length 5 --num-filled 2 --day-of-week Monday --num-clues 50 --self-consistency False
 --clue-length 5 --num-filled 3 --day-of-week Monday --num-clues 50 --self-consistency False
---clue-length 5 --num-filled 4 --day-of-week Monday --num-clues 50 --self-consistency False
