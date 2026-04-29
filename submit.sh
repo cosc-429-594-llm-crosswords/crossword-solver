@@ -13,9 +13,8 @@
 #SBATCH --error=logs/%A_%a.err
 
 SUBMIT_DIR=$(pwd)
+echo "SUBMIT_DIR is: $SUBMIT_DIR"
 trap "cp -r $SCRATCH/crossword_test1/data $SUBMIT_DIR/" EXIT
-
-source activate my-project-name
 
 # Each task gets its own port to avoid conflicts between concurrent jobs
 OLLAMA_PORT=$((11434 + SLURM_ARRAY_TASK_ID))
@@ -23,12 +22,15 @@ OLLAMA_PORT=$((11434 + SLURM_ARRAY_TASK_ID))
 # Move to scratch directory
 cd $SCRATCH
 mkdir -p crossword_test1
+mkdir -p $SCRATCH/crossword_test1/logs
 
 # Copy your project files over
 cp -r $SUBMIT_DIR/src $SCRATCH/crossword_test1/
-cp $SUBMIT_DIR/run_experiment.py $SCRATCH/crossword_test1/
+cp $SUBMIT_DIR/data_get_guesses.py $SCRATCH/crossword_test1/
 cp $SUBMIT_DIR/crossword_clues.csv $SCRATCH/crossword_test1/
 cp $SUBMIT_DIR/configs.txt $SCRATCH/crossword_test1/
+cp $SUBMIT_DIR/pyproject.toml $SCRATCH/crossword_test1/
+cp $SUBMIT_DIR/uv.lock $SCRATCH/crossword_test1/
 
 cd $SCRATCH/crossword_test1
 mkdir -p data/get_guesses_per_clue

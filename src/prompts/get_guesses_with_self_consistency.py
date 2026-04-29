@@ -1,3 +1,4 @@
+import os
 from functools import cache
 
 import requests
@@ -103,8 +104,10 @@ def __get_suggestions(pattern: list[LETTERS]) -> list[dict[str, str | int]]:
 
 @cache
 def __get_llm() -> Ollama:
+    ollama_host = os.environ.get("OLLAMA_HOST", "127.0.0.1:11434")
     llm = Ollama(
         model=LLM_MODEL,
+        base_url=f"http://{ollama_host}",
         request_timeout=1200.0,
         context_window=1000,
         json_mode=True,
