@@ -61,6 +61,7 @@ def parse_args() -> ExperimentConfig:
         num_filled=args.num_filled,
         num_clues=int(args.num_clues) if args.num_clues != "All" else "All",
         day_of_week=args.day_of_week,
+        self_consistency=args.self_consistency,
     )
 
 
