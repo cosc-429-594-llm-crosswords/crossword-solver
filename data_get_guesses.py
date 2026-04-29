@@ -54,7 +54,7 @@ def parse_args() -> ExperimentConfig:
     parser.add_argument("--num-filled", type=int, required=True)
     parser.add_argument("--num-clues", default="All")  # int or "All"
     parser.add_argument("--day-of-week", default="All")
-    parser.add_argument("--self-consistency", type=bool, default=True)
+    parser.add_argument("--self-consistency", action="store_true")
     args = parser.parse_args()
     return ExperimentConfig(
         clue_length=args.clue_length,
