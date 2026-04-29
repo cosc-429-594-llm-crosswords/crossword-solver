@@ -13,6 +13,7 @@ wheels/
 puz_files/
 goobix_puzzles/
 data/
+logs/
 
 *.puz
 *.csv

@@ -1,9 +1,12 @@
 #!/bin/bash
-#SBATCH --job-name=crossword_test1
+#SBATCH -J crossword_test1
+#SBATCH -A ACF-UTK0011
 #SBATCH --array=1-8%2          # 1 - N % j where N = number of lines in configs.txt and 2 is number of simultaneous jobs
-#SBATCH --cpus-per-task=4 
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=4 
 #SBATCH --gres=gpu:1  
 #SBATCH --mem=16G
+#SBATCH --partition=campus
 #SBATCH --time=03:00:00
 #SBATCH --output=logs/%A_%a.out
 #SBATCH --error=logs/%A_%a.err
