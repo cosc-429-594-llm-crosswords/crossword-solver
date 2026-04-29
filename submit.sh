@@ -27,6 +27,7 @@ cp $SUBMIT_DIR/crossword_clues.csv $SCRATCH/crossword_test1/
 cp $SUBMIT_DIR/configs.txt $SCRATCH/crossword_test1/
 
 cd $SCRATCH/crossword_test1
+mkdir -p data/get_guesses_per_clue
 
 # Start Ollama server in the background on this task's port
 OLLAMA_HOST="127.0.0.1:${OLLAMA_PORT}" ollama serve > logs/${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}_ollama.log 2>&1 &
