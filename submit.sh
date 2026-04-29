@@ -6,9 +6,9 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=4 
 #SBATCH --gpus=1
-#SBATCH --array=1-6%2
+#SBATCH --array=1-3%2
 #SBATCH --mem=16G
-#SBATCH --time=0-02:59:00
+#SBATCH --time=0-01:30:00
 #SBATCH --output=logs/%A_%a.out
 #SBATCH --error=logs/%A_%a.err
 
