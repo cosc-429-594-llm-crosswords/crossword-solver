@@ -8,13 +8,16 @@ from dataclasses import dataclass, field
 import pandas as pd
 
 from src.classes.clue import Clue
-from src.prompts.get_guesses_with_self_consistency import get_guesses_with_self_consistency, get_guesses_for_clue_using_llm
+from src.prompts.get_guesses_with_self_consistency import (
+    get_guesses_with_self_consistency,
+    get_guesses_for_clue_using_llm,
+)
 
 # --- Constants ---
 
 CLUE_LENGTH = 4
-NUM_FILLED = 0       # Must be less than CLUE_LENGTH
-NUM_CLUES = 2       # Must be an int or "All"
+NUM_FILLED = 0  # Must be less than CLUE_LENGTH
+NUM_CLUES = 2  # Must be an int or "All"
 DAY_OF_WEEK = "Monday"  # "All", "Monday", ..., "Sunday"
 SELF_CONSISTENCY = True
 SUGGESTIONS = True
@@ -27,6 +30,7 @@ OUTPUT_DIR = "data/get_guesses_per_clue"
 
 
 # --- Config & Validation ---
+
 
 @dataclass
 class ExperimentConfig:
@@ -49,7 +53,10 @@ class ExperimentConfig:
 
     @property
     def output_path(self) -> str:
-        return os.path.join(OUTPUT_DIR, f"test_sc_{self.self_consistency}_sugg_{self.suggestions}_clues_{self.num_clues}_{self.day_of_week}_fill_{self.num_filled}_length_{self.clue_length}.csv")
+        return os.path.join(
+            OUTPUT_DIR,
+            f"test_sc_{self.self_consistency}_sugg_{self.suggestions}_clues_{self.num_clues}_{self.day_of_week}_fill_{self.num_filled}_length_{self.clue_length}.csv",
+        )
 
 
 def parse_args() -> ExperimentConfig:
@@ -73,6 +80,7 @@ def parse_args() -> ExperimentConfig:
 
 # --- Data Loading ---
 
+
 def load_clues(csv_path: str, config: ExperimentConfig) -> pd.DataFrame:
     data = pd.read_csv(csv_path)
     print(f"Loaded dataset: {data.shape}")
@@ -84,9 +92,7 @@ def load_clues(csv_path: str, config: ExperimentConfig) -> pd.DataFrame:
 
     if isinstance(config.num_clues, int):
         if config.num_clues > len(clues):
-            _exit(
-                f"Requested {config.num_clues} clues, but only {len(clues)} match your criteria."
-            )
+            _exit(f"Requested {config.num_clues} clues, but only {len(clues)} match your criteria.")
         clues = clues.iloc[: config.num_clues]
 
     print(f"Filtered clues: {clues.shape}")
@@ -94,6 +100,7 @@ def load_clues(csv_path: str, config: ExperimentConfig) -> pd.DataFrame:
 
 
 # --- Pattern Generation ---
+
 
 # Return a letter pattern with `num_filled` positions revealed.
 def build_pattern(solution: str, num_filled: int) -> list[str]:
@@ -106,6 +113,7 @@ def build_pattern(solution: str, num_filled: int) -> list[str]:
 
 # --- Guess Evaluation ---
 
+
 @dataclass
 class GuessResult:
     guesses: list[str] = field(default_factory=lambda: [""] * TOP_N_GUESSES)
@@ -114,12 +122,16 @@ class GuessResult:
     top5_correct: bool = False
 
 
-def evaluate_clue(clue: Clue, pattern: list[str], solution: str, self_consistency: bool, suggestions: bool) -> GuessResult:
+def evaluate_clue(
+    clue: Clue, pattern: list[str], solution: str, self_consistency: bool, suggestions: bool
+) -> GuessResult:
     result = GuessResult()
 
     if self_consistency:
-        clue_guesses = get_guesses_with_self_consistency(clue, pattern, filter=False, debug=True, include_suggestions=suggestions)
-    else: 
+        clue_guesses = get_guesses_with_self_consistency(
+            clue, pattern, filter=False, debug=True, include_suggestions=suggestions
+        )
+    else:
         clue_guesses = get_guesses_for_clue_using_llm(clue, pattern, filter=False, debug=True)
 
     for i, guess in enumerate(clue_guesses[:TOP_N_GUESSES]):
@@ -134,17 +146,32 @@ def evaluate_clue(clue: Clue, pattern: list[str], solution: str, self_consistenc
 # --- Result Building ---
 
 RESULT_COLUMNS = [
-    "file", "date", "day_of_week", "number", "direction", "length",
-    "text", "solution", "pattern",
+    "file",
+    "date",
+    "day_of_week",
+    "number",
+    "direction",
+    "length",
+    "text",
+    "solution",
+    "pattern",
     *[f"guess{i}" for i in range(1, TOP_N_GUESSES + 1)],
     *[f"confidence{i}" for i in range(1, TOP_N_GUESSES + 1)],
 ]
 
 
-def build_result_row(row: pd.Series, solution: str, pattern: list[str], result: GuessResult) -> list:
+def build_result_row(
+    row: pd.Series, solution: str, pattern: list[str], result: GuessResult
+) -> list:
     return [
-        row["file"], row["date"], row["day_of_week"], row["number"],
-        row["direction"], row["length"], row["text"], solution,
+        row["file"],
+        row["date"],
+        row["day_of_week"],
+        row["number"],
+        row["direction"],
+        row["length"],
+        row["text"],
+        solution,
         " ".join(pattern),
         *result.guesses,
         *result.confidences,
@@ -153,52 +180,59 @@ def build_result_row(row: pd.Series, solution: str, pattern: list[str], result: 
 
 # --- Main ---
 
+
 def _exit(message: str) -> None:
     sys.exit(message)
 
 
 def main() -> None:
-    start = datetime.now()
+    try:
+        start = datetime.now()
 
-    config = parse_args()
-    config.validate()
+        config = parse_args()
+        config.validate()
 
-    clues = load_clues(INPUT_CSV, config)
+        clues = load_clues(INPUT_CSV, config)
 
-    results = []
-    top1_success = 0
-    top5_success = 0
+        results = []
+        top1_success = 0
+        top5_success = 0
 
-    for _, row in clues.iterrows():
-        print(row)
-        clue = Clue(
-            text=row["text"],
-            length=row["length"],
-            number=row["number"],
-            direction=row["direction"],
-        )
-        solution = row["solution"]
-        pattern = build_pattern(solution, config.num_filled)
-        result = evaluate_clue(clue, pattern, solution, config.self_consistency, config.suggestions)
+        for _, row in clues.iterrows():
+            print(row)
+            clue = Clue(
+                text=row["text"],
+                length=row["length"],
+                number=row["number"],
+                direction=row["direction"],
+            )
+            solution = row["solution"]
+            pattern = build_pattern(solution, config.num_filled)
+            result = evaluate_clue(
+                clue, pattern, solution, config.self_consistency, config.suggestions
+            )
 
-        if result.top1_correct:
-            top1_success += 1
-        if result.top5_correct:
-            top5_success += 1
+            if result.top1_correct:
+                top1_success += 1
+            if result.top5_correct:
+                top5_success += 1
 
-        results.append(build_result_row(row, solution, pattern, result))
+            results.append(build_result_row(row, solution, pattern, result))
 
-    results_df = pd.DataFrame(results, columns=RESULT_COLUMNS)
-    os.makedirs(os.path.dirname(config.output_path), exist_ok=True)
-    results_df.to_csv(config.output_path, index=False)
+        results_df = pd.DataFrame(results, columns=RESULT_COLUMNS)
+        os.makedirs(os.path.dirname(config.output_path), exist_ok=True)
+        results_df.to_csv(config.output_path, index=False)
 
-    elapsed = datetime.now() - start
-    print(f"Elapsed time: {elapsed}")
+        elapsed = datetime.now() - start
+        print(f"Elapsed time: {elapsed}")
 
-    total = len(clues)
-    print("Successfully wrote results to CSV file: {config.output_path}.")
-    print(f"Top-1 success rate: {top1_success}/{total} ({top1_success/total:.1%})")
-    print(f"Top-5 success rate: {top5_success}/{total} ({top5_success/total:.1%})")
+        total = len(clues)
+        print(f"Successfully wrote results to CSV file: {config.output_path}.")
+        print(f"Top-1 success rate: {top1_success}/{total} ({top1_success / total:.1%})")
+        print(f"Top-5 success rate: {top5_success}/{total} ({top5_success / total:.1%})")
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        results_df.to_csv(config.output_path, index=False)
 
 
 if __name__ == "__main__":
