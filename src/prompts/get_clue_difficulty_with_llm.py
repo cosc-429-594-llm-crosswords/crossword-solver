@@ -1,3 +1,4 @@
+import os
 from functools import cache
 
 from llama_index.core.prompts import RichPromptTemplate
@@ -57,8 +58,10 @@ Here are your clues to score:
 
 @cache
 def __get_llm() -> Ollama:
+    ollama_host = os.environ.get("OLLAMA_HOST", "127.0.0.1:11434")
     return Ollama(
         model=LLM_MODEL,
+        base_url=f"http://{ollama_host}",
         request_timeout=1200.0,
         json_mode=True,
         context_window=8000,

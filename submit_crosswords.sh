@@ -6,16 +6,16 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=4 
 #SBATCH --gpus=1
-#SBATCH --array=1-5%2
+#SBATCH --array=1-6%2
 #SBATCH --mem=16G
-#SBATCH --time=0-04:00:00
+#SBATCH --time=0-06:00:00
 #SBATCH --output=logs/%A_%a.out
 #SBATCH --error=logs/%A_%a.err
 
 SUBMIT_DIR=$(pwd)
 JOB_NAME="crossword_puzzles"
 echo "SUBMIT_DIR is: $SUBMIT_DIR"
-trap "kill $OLLAMA_PID; cp -r $SCRATCH/$JOB_NAME/data $SUBMIT_DIR/" EXIT
+trap 'kill $OLLAMA_PID; cp -r $SCRATCH/$JOB_NAME/data $SUBMIT_DIR/' EXIT
 
 # Each task gets its own port to avoid conflicts between concurrent jobs
 OLLAMA_PORT=$((11434 + SLURM_ARRAY_TASK_ID))
@@ -28,7 +28,9 @@ mkdir -p $SCRATCH/$JOB_NAME/logs
 # Copy your project files over
 cp -r $SUBMIT_DIR/src $SCRATCH/$JOB_NAME/
 cp $SUBMIT_DIR/data_solve_crosswords.py $SCRATCH/$JOB_NAME/
+cp $SUBMIT_DIR/solve_crossword.py $SCRATCH/$JOB_NAME/
 cp $SUBMIT_DIR/crosswords_configs.txt $SCRATCH/$JOB_NAME/
+cp -r $SUBMIT_DIR/puz_files $SCRATCH/$JOB_NAME/
 cp $SUBMIT_DIR/pyproject.toml $SCRATCH/$JOB_NAME/
 cp $SUBMIT_DIR/uv.lock $SCRATCH/$JOB_NAME/
 
