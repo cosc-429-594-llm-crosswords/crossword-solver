@@ -7,6 +7,9 @@ class Direction(StrEnum):
     across = "across"
     down = "down"
 
+    def __str__(self):
+        return self.value
+
 
 class RankedClue(BaseModel):
     number: int = Field(description="The clue number as it appears in the crossword puzzle.")
