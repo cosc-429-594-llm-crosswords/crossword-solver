@@ -143,3 +143,6 @@ class CrosswordPuzzle:
 
     def get_number_of_known_letters_for_all_clues(self) -> dict[CLUE_ID, int]:
         return {clue.id: self.__number_of_known_letters(clue) for clue in self.__clues}
+
+    def get_letter_grid(self):
+        return self.__letter_grid
