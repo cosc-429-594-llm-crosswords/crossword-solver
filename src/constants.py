@@ -1,4 +1,5 @@
 from typing import Literal, TypeAlias
+from enum import StrEnum
 
 # LLM_MODEL = "gemma4:e4b"
 LLM_MODEL = "llama3.1:latest"
@@ -45,3 +46,8 @@ LETTERS: TypeAlias = Literal[
     "_",
 ]
 CLUE_ID: TypeAlias = tuple[int, DIRECTIONS]
+
+class RANKING_ALGORITHMS(StrEnum): 
+    NONE = "NONE", 
+    VAGUENESS_AND_COMPLEXITY = "VAGUENESS_AND_COMPLEXITY",
+    VAGUENESS_AND_COMPLEXITY_PLUS_KNOWN_LETTERS = "VAGUENESS_AND_COMPLEXITY_PLUS_KNOWN_LETTERS",
