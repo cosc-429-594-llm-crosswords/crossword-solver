@@ -30,32 +30,72 @@ def solve_crossword(filepath: str, ranking: RANKING_ALGORITHMS):
     guesses: dict[CLUE_ID, list[Guess]] = {}
     completed_clues: list[CLUE_ID] = []
 
+    clue_difficulties: dict[CLUE_ID, int] = {}
+    ranked_clues: list[CLUE_ID] = []
+
     llm_call_counter = 0
 
     os.makedirs(f"data/solve_crosswords/", exist_ok=True)
 
     try: 
-        clue_difficulties = get_clue_difficulty_with_llm(crossword_puzzle.get_clues(), debug=True)
-        log_action("get_clue_difficulties", f"Getting clue difficulties: {clue_difficulties}")
+        if ranking in ["VAGUENESS_AND_COMPLEXITY_PLUS_KNOWN_LETTERS", "VAGUENESS_AND_COMPLEXITY"]:
+            clue_difficulties = get_clue_difficulty_with_llm(crossword_puzzle.get_clues(), debug=True)
+            log_action("get_clue_difficulties", f"Getting clue difficulties: {clue_difficulties}")
+        
 
         while not crossword_puzzle.is_solved and llm_call_counter < MAX_LLM_CALLS:
             log_action("print_grid", crossword_puzzle.get_letter_grid())
 
             number_of_known_letters = crossword_puzzle.get_number_of_known_letters_for_all_clues()
-            ranked_clues = sorted(
-                crossword_puzzle.incomplete_clues,
-                key=lambda c: (-number_of_known_letters[c.id], clue_difficulties[c.id]),
-            )
+            
+            if ranking == "VAGUENESS_AND_COMPLEXITY_PLUS_KNOWN_LETTERS":
+                ranked_clues = sorted(
+                    crossword_puzzle.incomplete_clues,
+                    key=lambda c: (-number_of_known_letters[c.id], clue_difficulties[c.id]),
+                )
 
-            log_action(
-                "determine_next_clue",
-                "".join(
-                    [
-                        f"{c.id} Number of known letters: {number_of_known_letters[c.id]} Difficulty: {clue_difficulties[c.id]}\n"
-                        for c in ranked_clues
-                    ]
-                ),
-            )
+                log_action(
+                    "determine_next_clue",
+                    "".join(
+                        [
+                            f"{c.id} Number of known letters: {number_of_known_letters[c.id]} Difficulty: {clue_difficulties[c.id]}\n"
+                            for c in ranked_clues
+                        ]
+                    ),
+                )
+            elif ranking == "VAGUENESS_AND_COMPLEXITY":
+                ranked_clues = sorted(
+                    crossword_puzzle.incomplete_clues,
+                    key=lambda c: (clue_difficulties[c.id]),
+                )
+                log_action(
+                    "determine_next_clue",
+                    "".join(
+                        [
+                            f"{c.id} Difficulty: {clue_difficulties[c.id]}\n"
+                            for c in ranked_clues
+                        ]
+                    ),
+                )
+            elif ranking == "NONE": 
+                ranked_clues = sorted(
+                    crossword_puzzle.incomplete_clues, 
+                    key=lambda c: c.id
+                )
+                log_action(
+                    "determine_next_clue",
+                    "".join(
+                        [
+                            f"{c.id}\n"
+                            for c in ranked_clues
+                        ]
+                    ),
+                )
+            else: 
+                log_action("param error", f"Error: Invalid ranking algorithm: {ranking}")
+                exit(1)
+
+            
 
             clue = ranked_clues[0]
 
