@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J crossword_test1
+#SBATCH -J crossword_guesses
 #SBATCH -A ACF-UTK0011
 #SBATCH --partition=campus-gpu
 #SBATCH --qos=campus-gpu
@@ -8,31 +8,32 @@
 #SBATCH --gpus=1
 #SBATCH --array=1-6%2
 #SBATCH --mem=16G
-#SBATCH --time=0-02:59:00
-#SBATCH --output=logs/%A_%a.out
-#SBATCH --error=logs/%A_%a.err
+#SBATCH --time=0-03:00:00
+#SBATCH --output=crossword_guesses/logs/%A_%a.out
+#SBATCH --error=crossword_guesses/logs/%A_%a.err
 
 SUBMIT_DIR=$(pwd)
+JOB_NAME="crossword_guesses"
 echo "SUBMIT_DIR is: $SUBMIT_DIR"
-trap "cp -r $SCRATCH/crossword_test1/data $SUBMIT_DIR/" EXIT
+trap "kill $OLLAMA_PID; cp -r $SCRATCH/$JOB_NAME/data $SUBMIT_DIR/" EXIT
 
 # Each task gets its own port to avoid conflicts between concurrent jobs
 OLLAMA_PORT=$((11434 + SLURM_ARRAY_TASK_ID))
 
 # Move to scratch directory
 cd $SCRATCH
-mkdir -p crossword_test1
-mkdir -p $SCRATCH/crossword_test1/logs
+mkdir -p $JOB_NAME
+mkdir -p $SCRATCH/$JOB_NAME/logs
 
 # Copy your project files over
-cp -r $SUBMIT_DIR/src $SCRATCH/crossword_test1/
-cp $SUBMIT_DIR/data_get_guesses.py $SCRATCH/crossword_test1/
-cp $SUBMIT_DIR/crossword_clues.csv $SCRATCH/crossword_test1/
-cp $SUBMIT_DIR/configs.txt $SCRATCH/crossword_test1/
-cp $SUBMIT_DIR/pyproject.toml $SCRATCH/crossword_test1/
-cp $SUBMIT_DIR/uv.lock $SCRATCH/crossword_test1/
+cp -r $SUBMIT_DIR/src $SCRATCH/$JOB_NAME/
+cp $SUBMIT_DIR/data_get_guesses.py $SCRATCH/$JOB_NAME/
+cp $SUBMIT_DIR/crossword_clues.csv $SCRATCH/$JOB_NAME/
+cp $SUBMIT_DIR/guesses_configs.txt $SCRATCH/$JOB_NAME/
+cp $SUBMIT_DIR/pyproject.toml $SCRATCH/$JOB_NAME/
+cp $SUBMIT_DIR/uv.lock $SCRATCH/$JOB_NAME/
 
-cd $SCRATCH/crossword_test1
+cd $SCRATCH/$JOB_NAME
 mkdir -p data/get_guesses_per_clue
 
 # Start Ollama server in the background on this task's port
@@ -47,8 +48,5 @@ done
 echo "Ollama ready."
 
 # Read the config line for this array task
-ARGS=$(sed -n "${SLURM_ARRAY_TASK_ID}p" configs.txt)
-OLLAMA_HOST="127.0.0.1:${OLLAMA_PORT}" uv run data_get_guesses.py $ARGS
-
-# Shut down the Ollama server when done
-kill $OLLAMA_PID
+ARGS=$(sed -n "${SLURM_ARRAY_TASK_ID}p" guesses_configs.txt)
+OLLAMA_HOST="127.0.0.1:${OLLAMA_PORT}" uv run python -u data_get_guesses.py $ARGS
