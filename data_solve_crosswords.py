@@ -19,7 +19,7 @@ end_date   = date(2026, 1, 1)
 
 def get_files_in_batch(start: date, end: date, batch_num: int, batch_size: int = 5,) -> list[str]:
     """Return all file names in batch of Mondays."""
-    mondays = pd.date_range(start=start_date, end=end_date, freq='W-MON').tolist()
+    mondays = pd.date_range(start=start, end=end, freq='W-MON').tolist()
 
     batch_list = []
     for monday in mondays[(batch_num-1) * batch_size: batch_num * batch_size]:

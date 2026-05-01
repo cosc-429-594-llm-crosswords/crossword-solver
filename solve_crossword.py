@@ -43,11 +43,10 @@ def solve_crossword(filepath: str, ranking: RANKING_ALGORITHMS):
             )
 
         while not crossword_puzzle.is_solved and llm_call_counter < MAX_LLM_CALLS:
-            log_action(logs, "print_grid", crossword_puzzle.get_letter_grid())
-
-            number_of_known_letters = crossword_puzzle.get_number_of_known_letters_for_all_clues()
+            log_action(logs, "print_grid", str(crossword_puzzle.get_letter_grid()))
 
             if ranking == "VAGUENESS_AND_COMPLEXITY_PLUS_KNOWN_LETTERS":
+                number_of_known_letters = crossword_puzzle.get_number_of_known_letters_for_all_clues()
                 ranked_clues = sorted(
                     crossword_puzzle.incomplete_clues,
                     key=lambda c: (-number_of_known_letters[c.id], clue_difficulties[c.id]),
