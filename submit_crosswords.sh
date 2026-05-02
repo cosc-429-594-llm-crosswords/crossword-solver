@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -J crossword_puzzles
 #SBATCH -A ACF-UTK0011
-#SBATCH --partition=campus-gpu
+#SBATCH --partition=campus-gpu-large,campus-gpu
 #SBATCH --qos=campus-gpu
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=4 
