@@ -118,7 +118,8 @@ def solve_crossword(filepath: str, ranking: RANKING_ALGORITHMS):
                 if len(crossword_puzzle.completed_clues) > 0:
                     crossword_puzzle.remove_answer(crossword_puzzle.completed_clues[-1])
 
-                clue_difficulties[clue.id] += 100
+                if ranking in ["VAGUENESS_AND_COMPLEXITY_PLUS_KNOWN_LETTERS", "VAGUENESS_AND_COMPLEXITY"]:
+                    clue_difficulties[clue.id] += 100
                 log_action(
                     logs,
                     "backtrack",
