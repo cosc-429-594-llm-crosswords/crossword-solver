@@ -14,6 +14,7 @@ puz_files/
 goobix_puzzles/
 data/
 logs/
+graphs-shayana-old/
 
 *.puz
 *.csv
