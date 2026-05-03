@@ -15,5 +15,9 @@ goobix_puzzles/
 data/
 logs/
 
+Baseline/
+Self-Consistency/
+Self-Consistency-and-Suggestions/
+
 *.puz
 *.csv
