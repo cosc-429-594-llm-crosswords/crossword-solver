@@ -14,7 +14,7 @@ class Clue:
     col: int = 0
 
     # The clue id is a combination of the clue number and direction.
-    # Note, all combintions of clue numbers and directions are not valid.
+    # Note, all combinations of clue numbers and directions are not valid.
     @property
     def id(self) -> CLUE_ID:
         return (self.number, self.direction)
