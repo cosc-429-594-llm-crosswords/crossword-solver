@@ -10,6 +10,7 @@ dependencies = [
     "llama-index-llms-ollama>=0.9.1",
     "matplotlib>=3.10.9",
     "openpyxl>=3.1.5",
+    "numpy>=2.4.2",
     "pandas>=3.0.2",
     "puzpy>=0.3.2",
     "pydantic>=2.12.5",
