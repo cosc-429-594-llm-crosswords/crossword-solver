@@ -27,9 +27,8 @@ mkdir -p $SCRATCH/$JOB_NAME/logs
 
 # Copy your project files over
 cp -r $SUBMIT_DIR/src $SCRATCH/$JOB_NAME/
-cp $SUBMIT_DIR/data_solve_crosswords.py $SCRATCH/$JOB_NAME/
+cp -r $SUBMIT_DIR/issac $SCRATCH/$JOB_NAME/
 cp $SUBMIT_DIR/solve_crossword.py $SCRATCH/$JOB_NAME/
-cp $SUBMIT_DIR/crosswords_configs.txt $SCRATCH/$JOB_NAME/
 cp -r $SUBMIT_DIR/puz_files $SCRATCH/$JOB_NAME/
 cp $SUBMIT_DIR/pyproject.toml $SCRATCH/$JOB_NAME/
 cp $SUBMIT_DIR/uv.lock $SCRATCH/$JOB_NAME/
@@ -49,6 +48,6 @@ done
 echo "Ollama ready."
 
 # Read the config line for this array task
-ARGS=$(sed -n "${SLURM_ARRAY_TASK_ID}p" crosswords_configs.txt)
-OLLAMA_HOST="127.0.0.1:${OLLAMA_PORT}" uv run python -u data_solve_crosswords.py $ARGS
+ARGS=$(sed -n "${SLURM_ARRAY_TASK_ID}p" issac/crosswords_configs.txt)
+OLLAMA_HOST="127.0.0.1:${OLLAMA_PORT}" uv run python -u issac/data_solve_crosswords.py $ARGS
 
