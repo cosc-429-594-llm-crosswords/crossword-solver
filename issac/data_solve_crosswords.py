@@ -3,7 +3,7 @@ import argparse
 import pandas as pd
 from datetime import date
 
-from issac.solve_crossword import solve_crossword
+from solve_crossword import solve_crossword
 from src.constants import RANKING_ALGORITHMS
 
 
