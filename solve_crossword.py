@@ -1,3 +1,4 @@
+import argparse
 import os
 
 import pandas as pd
@@ -192,3 +193,27 @@ def solve_crossword(filepath: str, ranking: RANKING_ALGORITHMS):
         print(f"Error occurred: {e}")
 
         logs.to_csv(f"data/solve_crosswords/ranking_{ranking}_{filepath}.csv", index=False)
+
+
+def main():
+    # Parse command line arguments for the crossword puzzle filepath and ranking algorithm to use
+    parser = argparse.ArgumentParser(description="Solve a crossword puzzle from a .puz file")
+    parser.add_argument("--filepath", "--f", help="Puzzle filepath without the .puz extension")
+    parser.add_argument(
+        "--ranking",
+        "--r",
+        choices=[
+            "VAGUENESS_AND_COMPLEXITY_PLUS_KNOWN_LETTERS",
+            "VAGUENESS_AND_COMPLEXITY",
+            "NONE",
+        ],
+        default="VAGUENESS_AND_COMPLEXITY_PLUS_KNOWN_LETTERS",
+        help="Ranking algorithm to use",
+    )
+
+    args = parser.parse_args()
+    solve_crossword(args.filepath, args.ranking)
+
+
+if __name__ == "__main__":
+    main()
