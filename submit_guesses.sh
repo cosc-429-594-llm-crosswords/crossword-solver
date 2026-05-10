@@ -27,9 +27,8 @@ mkdir -p $SCRATCH/$JOB_NAME/logs
 
 # Copy your project files over
 cp -r $SUBMIT_DIR/src $SCRATCH/$JOB_NAME/
-cp $SUBMIT_DIR/data_get_guesses.py $SCRATCH/$JOB_NAME/
+cp -r $SUBMIT_DIR/issac $SCRATCH/$JOB_NAME/
 cp $SUBMIT_DIR/crossword_clues.csv $SCRATCH/$JOB_NAME/
-cp $SUBMIT_DIR/guesses_configs.txt $SCRATCH/$JOB_NAME/
 cp $SUBMIT_DIR/pyproject.toml $SCRATCH/$JOB_NAME/
 cp $SUBMIT_DIR/uv.lock $SCRATCH/$JOB_NAME/
 
@@ -48,5 +47,5 @@ done
 echo "Ollama ready."
 
 # Read the config line for this array task
-ARGS=$(sed -n "${SLURM_ARRAY_TASK_ID}p" guesses_configs.txt)
-OLLAMA_HOST="127.0.0.1:${OLLAMA_PORT}" uv run python -u data_get_guesses.py $ARGS
+ARGS=$(sed -n "${SLURM_ARRAY_TASK_ID}p" issac/guesses_configs.txt)
+OLLAMA_HOST="127.0.0.1:${OLLAMA_PORT}" uv run python -u issac/data_get_guesses.py $ARGS

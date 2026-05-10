@@ -9,12 +9,18 @@ wheels/
 # Virtual environments
 .venv
 
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
 # Data files
 puz_files/
-goobix_puzzles/
 data/
 logs/
 graphs-shayana-old/
+
+Baseline/
+Self-Consistency/
+Self-Consistency-and-Suggestions/
 
 *.puz
 *.csv

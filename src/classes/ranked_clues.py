@@ -11,6 +11,10 @@ class Direction(StrEnum):
         return self.value
 
 
+# This is the schema the LLM will output when ranking the clues based on their difficulty.
+# Clues are identified using their clue number and direction (across or down).
+# Vagueness measures the number of possible answers for that clue.
+# Complexity measures the domain knowledge and reasoning steps required to solve the clue.
 class RankedClue(BaseModel):
     number: int = Field(description="The clue number as it appears in the crossword puzzle.")
     direction: Direction = Field(
@@ -27,6 +31,7 @@ class RankedClue(BaseModel):
     )
 
 
+# To rank many clues at once, we define this schema
 class RankedClues(BaseModel):
     ranked_clues: list[RankedClue] = Field(
         description="A list of clues ranked by their difficulty score, with the least difficult clue first."

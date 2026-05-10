@@ -12,7 +12,7 @@ from src.constants import RANKING_ALGORITHMS
 # BATCH_NUM = int # out of 10, because total 50 puzzles
 
 # Constants
-BATCH_SIZE = 5 # will need to 
+BATCH_SIZE = 5
 start_date = date(2025, 1, 1)
 end_date   = date(2026, 1, 1)
 
