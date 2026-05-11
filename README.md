@@ -40,20 +40,20 @@ Here is an overview of the project structure:
 ### Files
 
 - `solve_crossword.py`: This file is used to solve individual crosswords and contains the main crossword solving algorithm
-- `data_collection.py`: This file is used to solve .puz files in bulk
-- `generate_dataset.ipynb`: This file is used to create a .csv with all the clues used to test the algorithm
-- `submit_crossword.sh`: This shell script is used to solve a crossword in bulk on ISAAC
-- `submit_guesses.sh`: This shell script is used to test the algorithm's ability to generate guesses in bulk on ISAAC
+- `data_collection.py`: This file is used to scrape .puz files in bulk
+- `generate_dataset.ipynb`: This file is used to create a CSV file with all of the individual clues used to test the algorithm
+- `submit_crossword.sh`: This shell script is used to solve a crossword in bulk using a batch job on ISAAC-NG
+- `submit_guesses.sh`: This shell script is used to test the algorithm's ability to generate guesses in bulk using a batch job on ISAAC-NG
 
-### directory
+### Directories
 
 - `src/`: This directory contains the main source code for the solving algorithm, including the data structures, LLM prompts, and helper functions.
 - `graphs/`: This directory contains the source code to produce the graphs used in the paper and presentation
-- `issac/`: This directory contains the code to run the solving algorithm in bulk jobs on the University of Tennessee’s ISAAC-NG supercomputing cluster
+- `issac/`: This directory contains the code to run the solving algorithm in batch jobs on the University of Tennessee’s ISAAC-NG supercomputing cluster
 
-## How to Setup/Usage
+## Setup/Usage
 
-To manage the project and Python dependencies, we use UV. To install UV, please follow the instructions on their [installation page](https://docs.astral.sh/uv/getting-started/installation/).
+To manage the project and Python dependencies, we use UV. To install UV, please follow the instructions on their [installation page](https://docs.astral.sh/uv/getting-started/installation/). To download llama 3.1 locally, please follow the instruction on the [Ollama Documentation](https://ollama.com/library/llama3.1).
 
 1. Use the following command to download all the dependencies
 
@@ -61,7 +61,7 @@ To manage the project and Python dependencies, we use UV. To install UV, please 
 uv sync
 ```
 
-2. If you are a Jupiter notebook, select the `crossword-solver` environment in the top right part of the notebook
+2. If you are in a Jupyter notebook, select the `crossword-solver` environment in the top right part of the notebook
 
 ### How to collect the crosswords
 
@@ -120,17 +120,19 @@ sbatch submit_crosswords.sh
 sbatch submit_guesses.sh
 ```
 
-## Acknowledgement
+## Acknowledgements
 
 As a part of this project, we used several key external libraries:
 
 - [thisisparker/xword-dl](https://github.com/thisisparker/xword-dl): This open-source python utility was used to scrape `.puz` files from various news outlets (New York Times, Washington Post, USA Today)
 - [alexdej/puzpy](https://github.com/alexdej/puzpy): This library was used to read data from the `.puz` file such as clues, solutions, board size, etc
 - [Datamuse](https://www.datamuse.com/api/): This external API was used to provide suggestions by providing a list of words that fit the search criteria
+- [Ollama](https://ollama.com/library/llama3.1): We used Ollama to run LLMs locally, specifically Llama 3.1
+- [LlamaIndex](https://www.llamaindex.ai/): We used LlamaIndex as our argentic framework to call the local Ollama LLM
 
-## AI Use
+## AI Usage
 
 We used to following AI tools to help with the development of this project:
 
-- GitHub Copilot
-- Claude (through the browser)
+- GitHub Copilot was used to refactor and simplify the crossword solving algorithm
+- Claude (through the browser) to help with the batch job scripts for ISAAC
