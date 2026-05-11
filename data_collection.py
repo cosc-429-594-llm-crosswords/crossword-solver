@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from src.data_collection.download_puz_file import download_puz_file
 
 
+# Parse command line arguments
 def parse_arguments() -> Namespace:
     parser = ArgumentParser(description="Download crosswords for a specific outlet and year range.")
     parser.add_argument(
@@ -21,6 +22,7 @@ def parse_arguments() -> Namespace:
     return parser.parse_args()
 
 
+# Generate a list of dates between the start and end years
 def get_dates(start_year: int, end_year: int) -> list[date]:
     start_date = date(start_year, 1, 1)
     end_date = date(end_year, 12, 31)
@@ -37,12 +39,14 @@ def get_dates(start_year: int, end_year: int) -> list[date]:
 def main() -> None:
     args = parse_arguments()
 
+    # For each date in the date range, download the corresponding .puz file
     dates = get_dates(args.start_year, args.end_year)
     for current_date in dates:
         day = current_date.strftime("%d")
         month = current_date.strftime("%m")
         year = current_date.strftime("%Y")
 
+        # Download the .puz file for the current date and outlet
         download_puz_file(
             outlet=args.outlet,
             day=day,
