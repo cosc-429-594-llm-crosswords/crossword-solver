@@ -116,6 +116,10 @@ sbatch submit_crosswords.sh
 2. Change the `#SBATCH --array=1-6%2` line in the `submit_guesses.sh` file to the number of jobs you have (Ex. `#SBATCH --array=1-6%2` for 6 jobs, `#SBATCH --array=1-4%2` for 4 jobs)
 3. Run the following command to start the job (This may take a few hours)
 
+```shell
+sbatch submit_guesses.sh
+```
+
 ## Acknowledgement
 
 As a part of this project, we used several key external libraries:
